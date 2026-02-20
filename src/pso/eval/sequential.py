@@ -1,7 +1,10 @@
 from typing import Callable
 import numpy as np
 
-class SequentialEvaluator:
+from .base import BaseEvaluator
+
+
+class SequentialEvaluator(BaseEvaluator):
     def __init__(self, objective: Callable[[np.ndarray], float]):
         self.objective = objective
 

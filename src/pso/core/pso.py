@@ -5,7 +5,8 @@ from typing import Callable, List
 import numpy as np
 
 from .bounds import clamp_positions
-from ..eval.sequential import SequentialEvaluator
+from .state import SwarmState
+from ..eval.base import BaseEvaluator
 
 @dataclass
 class PSOResult:
@@ -23,6 +24,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
     c2: float,
     lower: np.ndarray,
     upper: np.ndarray,
+    evaluator: BaseEvaluator,
     seed: int = 0,) -> PSOResult:
 
     rng = np.random.default_rng(seed)
@@ -30,35 +32,46 @@ def run_pso(objective: Callable[[np.ndarray], float],
     positions = clamp_positions(positions, lower, upper)
     velocities = rng.uniform((-0.1 * (upper-lower)), (0.1 * (upper-lower)), size=(n_particles, d))
 
-    evaluator = SequentialEvaluator(objective)
-    fitness = evaluator.evaluate(positions) 
-    pbest_positions = positions.copy()
-    pbest_values = fitness.copy()
-    gbest_index = np.argmin(pbest_values)
-    gbest_position = pbest_positions[gbest_index].copy()
-    gbest_value = float(pbest_values[gbest_index])
-    best_history = [gbest_value]
+    fitness = evaluator.evaluate(positions)
+
+    state = SwarmState(
+        positions=positions,
+        velocities=velocities,
+        pbest_positions=positions.copy(),
+        pbest_values=fitness.copy(),
+        gbest_position=positions[np.argmin(fitness)].copy(),
+        gbest_value=float(fitness[np.argmin(fitness)]),
+    )
+
+    best_history = [state.gbest_value]
 
     for _ in range(iters):
         r1 = rng.random((n_particles, d))
         r2 = rng.random((n_particles, d))
 
-        velocities = w * velocities + c1 * r1 * (pbest_positions - positions) + c2 * r2 * (gbest_position - positions)
-        positions += velocities
-        positions = clamp_positions(positions, lower, upper)
+        state.velocities = (
+            w * state.velocities
+            + c1 * r1 * (state.pbest_positions - state.positions)
+            + c2 * r2 * (state.gbest_position - state.positions)
+        )
+        state.positions += state.velocities
+        state.positions = clamp_positions(state.positions, lower, upper)
 
-        fitness = evaluator.evaluate(positions)
+        fitness = evaluator.evaluate(state.positions)
 
-        improved_mask = fitness < pbest_values
-        pbest_positions[improved_mask] = positions[improved_mask]
-        pbest_values[improved_mask] = fitness[improved_mask]
+        improved_mask = fitness < state.pbest_values
+        state.pbest_positions[improved_mask] = state.positions[improved_mask]
+        state.pbest_values[improved_mask] = fitness[improved_mask]
 
-        gbest_index = np.argmin(pbest_values)
-        if pbest_values[gbest_index] < gbest_value:
-            gbest_position = pbest_positions[gbest_index].copy()
-            gbest_value = float(pbest_values[gbest_index])
+        gbest_index = np.argmin(state.pbest_values)
+        if state.pbest_values[gbest_index] < state.gbest_value:
+            state.gbest_position = state.pbest_positions[gbest_index].copy()
+            state.gbest_value = float(state.pbest_values[gbest_index])
 
-        best_history.append(gbest_value)
+        best_history.append(state.gbest_value)
 
-
-
+    return PSOResult(
+        best_position=state.gbest_position,
+        best_value=state.gbest_value,
+        best_history=best_history,
+    )
