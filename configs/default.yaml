@@ -1,0 +1,11 @@
+objective: sphere
+dim: 30
+n_particles: 100
+max_iter: 500
+w: 0.719
+c1: 1.49445
+c2: 1.49445
+lower: -100.0
+upper: 100.0
+seed: 42
+evaluator: sequential

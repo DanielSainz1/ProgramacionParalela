@@ -1,7 +1,14 @@
 import numpy as np
+import argparse
 from pso.objectives.sphere import sphere
 from pso.eval.sequential import SequentialEvaluator
 from pso.core.pso import run_pso
+
+parser = arg.parse.ArgumentParser(description="Run PSO")
+parser.add_argument("--objective", type = str) #define accepted arguments
+parser.add_argument("--dim", type=int)
+parser.add_argument("--seed", type=int)
+args = parser.parse_args() #read users arguments
 
 def main() -> None:
     objective = sphere
