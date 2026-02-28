@@ -1,35 +1,29 @@
-import numpy as np
 import argparse
-from pso.objectives.sphere import sphere
-from pso.eval.sequential import SequentialEvaluator
-from pso.core.pso import run_pso
+from pso.experiments.config import PSOConfig
+from pso.experiments.runner import run_pso_from_config
 
-parser = arg.parse.ArgumentParser(description="Run PSO")
-parser.add_argument("--objective", type = str) #define accepted arguments
-parser.add_argument("--dim", type=int)
-parser.add_argument("--seed", type=int)
-args = parser.parse_args() #read users arguments
 
 def main() -> None:
-    objective = sphere
-    d = 30
-    n_particles = 100
-    iters = 200
-    w = 0.719
-    c1 = 1.49445
-    c2 = 1.49445
-    lower = np.full(d, -100.0)
-    upper = np.full(d, 100.0)
-    seed = 42
+    parser = argparse.ArgumentParser(description="Run PSO")
+    parser.add_argument("--objective", type = str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"]) #define accepted arguments
+    parser.add_argument("--config", type=str, default="configs/default.yaml")
+    parser.add_argument("--dim", type=int)
+    parser.add_argument("--seed", type=int)
+    args = parser.parse_args() #read users arguments
 
-    evaluator = SequentialEvaluator(objective)
-    fitness = evaluator.evaluate(np.array([[0.0] * d]))
-    print("Initial fitness at [0,...,0]:", fitness[0])
+    cfg =  PSOConfig.from_yaml(args.config)
 
-    result = run_pso(sphere, d, n_particles, iters, w, c1, c2, lower, upper, evaluator, seed)
-    print("Best value:", result.best_value)
-    print("Best position (first 5 dims):", result.best_position[:5])
-    print("Last 5 history values:", result.best_history[-5:])
+    if args.objective is not None:
+        cfg.objective = args.objective
+    if args.dim is not None:
+        cfg.dim = args.dim
+    if args.seed is not None:
+        cfg.seed = args.seed
+
+    result = run_pso_from_config(cfg)
+    print("Objective: ", cfg.objective, "| Dim: ", cfg.dim, " | Seed: ", cfg.seed)
+    print("Best value: ",  result.best_value)
+    print("Best position (first 5 dimensions): ", result.best_position[:5])
 
 
 if __name__ == "__main__":
