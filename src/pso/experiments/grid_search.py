@@ -22,4 +22,12 @@ def grid_search(
         writer = csv.writer(f)
         writer.writerow(["w", "c1", "c2", "seed", "best_value"])
 
-        # Not finished yet
+        for w, c1, c2 in product(w_values, c1_values, c2_values):
+            for seed in seeds:
+                cfg = copy.copy(base_cfg)
+                cfg.w = w
+                cfg.c1 = c1
+                cfg.c2 = c2
+                cfg.seed = seed
+                result = run_pso_from_config(cfg)
+                writer.writerow([w, c1, c2, seed, result.best_value])
