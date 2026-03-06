@@ -13,6 +13,7 @@ class PSOResult:
     best_position: np.ndarray
     best_value: float
     best_history: List[float]
+    position_history: list
 
 
 def run_pso(objective: Callable[[np.ndarray], float],
@@ -25,8 +26,10 @@ def run_pso(objective: Callable[[np.ndarray], float],
     lower: np.ndarray,
     upper: np.ndarray,
     evaluator: BaseEvaluator,
-    seed: int = 0,) -> PSOResult:
+    seed: int = 0,
+    record_positions: bool = False,) -> PSOResult:
 
+    
     rng = np.random.default_rng(seed)
     positions = rng.uniform(lower, upper, size=(n_particles, d))
     positions = clamp_positions(positions, lower, upper)
@@ -44,6 +47,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
     )
 
     best_history = [state.gbest_value]
+    position_history = []
 
     for _ in range(iters):
         r1 = rng.random((n_particles, d))
@@ -54,8 +58,12 @@ def run_pso(objective: Callable[[np.ndarray], float],
             + c1 * r1 * (state.pbest_positions - state.positions)
             + c2 * r2 * (state.gbest_position - state.positions)
         )
+        
         state.positions += state.velocities
         state.positions = clamp_positions(state.positions, lower, upper)
+
+        if record_positions:
+            position_history.append(state.positions.copy())
 
         fitness = evaluator.evaluate(state.positions)
 
@@ -74,4 +82,5 @@ def run_pso(objective: Callable[[np.ndarray], float],
         best_position=state.gbest_position,
         best_value=state.gbest_value,
         best_history=best_history,
+        position_history=position_history,
     )
