@@ -8,7 +8,7 @@ LOWER = np.full(D, -10.0)
 UPPER = np.full(D, 10.0)
 EVALUATOR = SequentialEvaluator(sphere)
 
-## Make sure best_history doesn't go up.
+## Makes sure best_history doesn't go up.
 def test_monotonic_gbest():
     seed = 12345
     result = run_pso(sphere,D,20,100,0.719,1.49445,1.49445,LOWER,UPPER,EVALUATOR,seed)

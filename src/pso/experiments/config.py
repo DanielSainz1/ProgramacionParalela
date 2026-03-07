@@ -20,5 +20,5 @@ class PSOConfig:
     def from_yaml(cls, path: str)-> PSOConfig:
         import yaml
         with open(path) as f:
-            data = yaml.safe_load(f) ##Reads YAML as a python dictionarie
+            data = yaml.safe_load(f) 
         return cls(**data) 

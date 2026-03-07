@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from typing import Callable
 
+"""
+"""
 
 def animate_swarm_2d(
     position_history: list,
@@ -13,7 +15,7 @@ def animate_swarm_2d(
     out_path: str = "results/swarm.gif",
     fps: int = 10,
 ) -> None:
-    # --- Contorno de la función en el fondo ---
+    
     grid_points = np.linspace(lower, upper, 200)
     X, Y = np.meshgrid(grid_points, grid_points)
     Z = np.array([[objective(np.array([x, y])) for x in grid_points] for y in grid_points])
