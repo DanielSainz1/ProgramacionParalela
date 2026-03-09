@@ -9,6 +9,7 @@ def main() -> None:
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)
+    parser.add_argument("--profile", action="store_true",help = "Run with cProfile and print timing report")
     args = parser.parse_args() #read users arguments
 
     cfg =  PSOConfig.from_yaml(args.config)
@@ -20,7 +21,18 @@ def main() -> None:
     if args.seed is not None:
         cfg.seed = args.seed
 
-    result = run_pso_from_config(cfg)
+    if args.profile:
+        import cProfile, pstats, io as _io
+        pr = cProfile.Profile()
+        pr.enable()
+        result = run_pso_from_config(cfg)
+        pr.disable()
+        s = _io.StringIO()
+        pstats.Stats(pr, stream=s).sort_stats("cumulative").print_stats(15)
+        print(s.getvalue())
+    else:
+        result = run_pso_from_config(cfg)
+
     print("Objective: ", cfg.objective, "| Dim: ", cfg.dim, " | Seed: ", cfg.seed)
     print("Best value: ",  result.best_value)
     print("Best position (first 5 dimensions): ", result.best_position[:5])
