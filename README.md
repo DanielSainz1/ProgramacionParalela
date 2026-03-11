@@ -144,10 +144,3 @@ To switch evaluator, change one line in the config:
 evaluator: sequential   # or threading, multiprocessing, asyncio, vectorized
 ```
 
-| Version | Strategy | Status |
-|---|---|---|
-| V0 | Sequential (baseline) | ✅ |
-| V1 | Threading | ⬜ |
-| V2 | Multiprocessing | ⬜ |
-| V3 | Asyncio | ⬜ |
-| V4 | NumPy vectorization | ⬜ |
