@@ -7,7 +7,6 @@ def main() -> None:
     parser.add_argument("--objective", type = str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"]) #define accepted arguments
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int, default=2)
-    parser.add_argument("--seed", type=int)
     args = parser.parse_args() #read users arguments
 
     cfg =  PSOConfig.from_yaml(args.config)
@@ -23,7 +22,7 @@ def main() -> None:
     seeds = [42, 99, 123]
     grid_search(cfg, w_values, c1_values, c2_values, seeds)
 
-    print("Grid seach completed. Results in results/grid_search.csv")
+    print("Grid search completed. Results in results/grid_search.csv")
 
 if __name__ == "__main__":
     main()

@@ -27,13 +27,13 @@ def animate_swarm_2d(
     ax.set_xlabel("x₁")
     ax.set_ylabel("x₂")
 
-    # --- Elementos que se actualizan en cada frame ---
+    
     particles_plot, = ax.plot([], [], "o", color="white", ms=4, alpha=0.7)
     gbest_plot,     = ax.plot([], [], "*", color="red",   ms=12)
     title = ax.set_title("")
 
     def update(frame):
-        positions = position_history[frame]            # (n_particles, 2)
+        positions = position_history[frame]           
         particles_plot.set_data(positions[:, 0], positions[:, 1])
         gbest_plot.set_data([gbest_history[frame][0]], [gbest_history[frame][1]])
         title.set_text(f"Iteración {frame + 1} / {len(position_history)}")
