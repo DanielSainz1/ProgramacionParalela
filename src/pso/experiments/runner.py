@@ -3,6 +3,7 @@ from .config import PSOConfig
 from ..core.pso import run_pso, PSOResult
 from ..eval.sequential import SequentialEvaluator
 from ..objectives import OBJECTIVES
+from ..eval.threading_eval import ThreadingEvaluator
 
 # Faltan por añadir en V1,v2,v3,v4:
 # "threading":      ThreadingEvaluator,
@@ -13,13 +14,14 @@ from ..objectives import OBJECTIVES
 
 EVALUATORS = {
     "sequential": SequentialEvaluator,
+    "threading": ThreadingEvaluator,
 }
 
 def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSOResult:
     #Get the objective function from the registry
     objective = OBJECTIVES[cfg.objective]
 
-    #Sets the limits for PSO
+    #Creates arrays of size dim to set the bounds
     lower = np.full(cfg.dim, cfg.lower)
     upper = np.full(cfg.dim, cfg.upper)
 
