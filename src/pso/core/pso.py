@@ -14,6 +14,7 @@ class PSOResult:
     best_value: float
     best_history: List[float]
     position_history: list
+    gbest_position_history: list
 
 
 def run_pso(objective: Callable[[np.ndarray], float],
@@ -48,6 +49,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
 
     best_history = [state.gbest_value]
     position_history = []
+    gbest_position_history = []
 
     for _ in range(iters):
         r1 = rng.random((n_particles, d))
@@ -77,10 +79,12 @@ def run_pso(objective: Callable[[np.ndarray], float],
             state.gbest_value = float(state.pbest_values[gbest_index])
 
         best_history.append(state.gbest_value)
+        gbest_position_history.append(state.gbest_position.copy())
 
     return PSOResult(
         best_position=state.gbest_position,
         best_value=state.gbest_value,
         best_history=best_history,
         position_history=position_history,
+        gbest_position_history=gbest_position_history,
     )

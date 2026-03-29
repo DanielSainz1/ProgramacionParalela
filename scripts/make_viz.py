@@ -43,7 +43,7 @@ def main():
         # Re-run PSO with record_positions = True
         cfg = PSOConfig(**pso_data)
         result = run_pso_from_config(cfg, record_positions=True)
-        gbest_history = [result.best_position] * len(result.position_history)
+        gbest_history = result.gbest_position_history
         lower, upper= BOUNDS[objective_name]
         animate_swarm_2d(
             position_history=result.position_history,
