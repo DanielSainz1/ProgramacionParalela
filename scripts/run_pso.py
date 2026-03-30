@@ -9,6 +9,7 @@ def main() -> None:
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)
+    parser.add_argument("--evaluator", type=str)
     parser.add_argument("--profile", action="store_true",help = "Run with cProfile and print timing report")
     args = parser.parse_args() #read users arguments
 
@@ -20,6 +21,8 @@ def main() -> None:
         cfg.dim = args.dim
     if args.seed is not None:
         cfg.seed = args.seed
+    if args.evaluator is not None:
+        cfg.evaluator = args.evaluator
 
     if args.profile:
         import cProfile, pstats, io as _io
