@@ -4,6 +4,7 @@ from ..core.pso import run_pso, PSOResult
 from ..eval.sequential import SequentialEvaluator
 from ..objectives import OBJECTIVES
 from ..eval.threading_eval import ThreadingEvaluator
+from ..eval.multiprocessing_eval import MultiprocessingEvaluator
 
 # Faltan por añadir en V1,v2,v3,v4:
 # "threading":      ThreadingEvaluator,
@@ -15,6 +16,7 @@ from ..eval.threading_eval import ThreadingEvaluator
 EVALUATORS = {
     "sequential": SequentialEvaluator,
     "threading": ThreadingEvaluator,
+    "multiprocessing": MultiprocessingEvaluator,
 }
 
 def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSOResult:
