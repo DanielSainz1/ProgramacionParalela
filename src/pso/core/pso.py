@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, List
 import numpy as np
+import logging
 
 from .bounds import clamp_positions
 from .state import SwarmState
 from ..eval.base import BaseEvaluator
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class PSOResult:
@@ -32,6 +35,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
 
     
     rng = np.random.default_rng(seed)
+    logger.info("PSO start: %d particles, dim=%d, iters=%d", n_particles, d, iters)
     positions = rng.uniform(lower, upper, size=(n_particles, d))
     positions = clamp_positions(positions, lower, upper)
     velocities = rng.uniform((-0.1 * (upper-lower)), (0.1 * (upper-lower)), size=(n_particles, d))
@@ -77,9 +81,13 @@ def run_pso(objective: Callable[[np.ndarray], float],
         if state.pbest_values[gbest_index] < state.gbest_value:
             state.gbest_position = state.pbest_positions[gbest_index].copy()
             state.gbest_value = float(state.pbest_values[gbest_index])
-
+        if _ % 50 == 0 or _ == iters-1:
+            logger.info("Iter %4d | best=%.6e", _, state.gbest_value)
+        
         best_history.append(state.gbest_value)
         gbest_position_history.append(state.gbest_position.copy())
+
+    logger.info("PSO done: best=%.6e", state.gbest_value)
 
     return PSOResult(
         best_position=state.gbest_position,

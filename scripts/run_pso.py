@@ -1,7 +1,9 @@
 import argparse
 from pso.experiments.config import PSOConfig
 from pso.experiments.runner import run_pso_from_config
+import logging
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run PSO")
