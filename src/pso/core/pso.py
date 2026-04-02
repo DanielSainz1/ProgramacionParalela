@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable, List
 import numpy as np
 import logging
+import time
 
 from .bounds import clamp_positions
 from .state import SwarmState
@@ -18,6 +19,9 @@ class PSOResult:
     best_history: List[float]
     position_history: list
     gbest_position_history: list
+    total_time: float
+    eval_time: float
+    update_time: float
 
 
 def run_pso(objective: Callable[[np.ndarray], float],
@@ -40,6 +44,10 @@ def run_pso(objective: Callable[[np.ndarray], float],
     positions = clamp_positions(positions, lower, upper)
     velocities = rng.uniform((-0.1 * (upper-lower)), (0.1 * (upper-lower)), size=(n_particles, d))
 
+    t_start = time.perf_counter()
+    t_eval = 0.0
+    t_update = 0.0
+
     fitness = evaluator.evaluate(positions)
 
     state = SwarmState(
@@ -54,24 +62,29 @@ def run_pso(objective: Callable[[np.ndarray], float],
     best_history = [state.gbest_value]
     position_history = []
     gbest_position_history = []
+    
 
     for _ in range(iters):
         r1 = rng.random((n_particles, d))
         r2 = rng.random((n_particles, d))
 
+        t0 = time.perf_counter()
         state.velocities = (
             w * state.velocities
             + c1 * r1 * (state.pbest_positions - state.positions)
             + c2 * r2 * (state.gbest_position - state.positions)
         )
-        
+
         state.positions += state.velocities
         state.positions = clamp_positions(state.positions, lower, upper)
+        t_update += time.perf_counter() - t0
 
         if record_positions:
             position_history.append(state.positions.copy())
 
+        t0 = time.perf_counter()
         fitness = evaluator.evaluate(state.positions)
+        t_eval += time.perf_counter() - t0
 
         improved_mask = fitness < state.pbest_values
         state.pbest_positions[improved_mask] = state.positions[improved_mask]
@@ -89,10 +102,16 @@ def run_pso(objective: Callable[[np.ndarray], float],
 
     logger.info("PSO done: best=%.6e", state.gbest_value)
 
+    total_time = time.perf_counter() - t_start
+    logger.info("Times: total=%.4fs, eval=%.4fs, update=%.4fs", total_time, t_eval, t_update)
+
     return PSOResult(
         best_position=state.gbest_position,
         best_value=state.gbest_value,
         best_history=best_history,
         position_history=position_history,
         gbest_position_history=gbest_position_history,
+        total_time=total_time,
+        eval_time=t_eval,
+        update_time=t_update,
     )
