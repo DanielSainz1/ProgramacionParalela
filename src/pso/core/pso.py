@@ -35,6 +35,8 @@ def run_pso(objective: Callable[[np.ndarray], float],
     upper: np.ndarray,
     evaluator: BaseEvaluator,
     seed: int = 0,
+    tol: float = 1e-10,
+    stagnation: int = 50,
     record_positions: bool = False,) -> PSOResult:
 
     
@@ -62,6 +64,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
     best_history = [state.gbest_value]
     position_history = []
     gbest_position_history = []
+    no_improve = 0
     
 
     for _ in range(iters):
@@ -94,6 +97,16 @@ def run_pso(objective: Callable[[np.ndarray], float],
         if state.pbest_values[gbest_index] < state.gbest_value:
             state.gbest_position = state.pbest_positions[gbest_index].copy()
             state.gbest_value = float(state.pbest_values[gbest_index])
+
+        if best_history[-1] - state.gbest_value < tol:
+            no_improve += 1
+        else:
+            no_improve = 0
+
+        if no_improve >= stagnation:
+            logger.info("Stopped: no improvement for %d iterations", stagnation)
+            break
+
         if _ % 50 == 0 or _ == iters-1:
             logger.info("Iter %4d | best=%.6e", _, state.gbest_value)
         

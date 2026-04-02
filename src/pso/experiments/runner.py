@@ -6,13 +6,6 @@ from ..objectives import OBJECTIVES
 from ..eval.threading_eval import ThreadingEvaluator
 from ..eval.multiprocessing_eval import MultiprocessingEvaluator
 
-# Faltan por añadir en V1,v2,v3,v4:
-# "threading":      ThreadingEvaluator,
-# "multiprocessing": ProcessEvaluator,
-# "asyncio":        AsyncEvaluator,
-# "vectorized":     VectorizedEvaluator,
-
-
 EVALUATORS = {
     "sequential": SequentialEvaluator,
     "threading": ThreadingEvaluator,
@@ -33,4 +26,5 @@ def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSORe
 
     return run_pso(objective, cfg.dim, cfg.n_particles, cfg.max_iter,
     cfg.w, cfg.c1, cfg.c2, lower, upper, evaluator, seed=cfg.seed,
+    tol=cfg.tol, stagnation=cfg.stagnation,
     record_positions=record_positions)
