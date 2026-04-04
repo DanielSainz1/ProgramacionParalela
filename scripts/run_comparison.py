@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from pso.experiments.config import PSOConfig
 from pso.experiments.runner import run_pso_from_config
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s | %(message)s")
+logger = logging.getLogger(__name__)
 
 EVALUATORS = ["sequential", "threading", "multiprocessing"]
 OBJECTIVES = ["sphere", "rosenbrock", "rastrigin", "ackley"]
@@ -19,7 +20,7 @@ def main():
         for dim in DIMS:
             cfg.objective = obj
             cfg.dim = dim
-            print(f"\n=== {obj} | dim={dim} ===")
+            logger.warning("=== %s | dim=%d ===", obj, dim)
 
             times = {}
             for ev in EVALUATORS:
@@ -43,12 +44,12 @@ def main():
                     "speedup": round(speedup, 2),
                 }
                 rows.append(row)
-                print(f"  {ev:20s} | {elapsed:.4f}s | eval={result.eval_time:.4f}s | update={result.update_time:.4f}s | best={result.best_value:.6e}")
+                logger.warning("  %20s | %.4fs | eval=%.4fs | update=%.4fs | best=%.6e", ev, elapsed, result.eval_time, result.update_time, result.best_value)
 
             base = times["sequential"]
             for ev in EVALUATORS:
                 speedup = base / times[ev]
-                print(f"  {ev:20s} | speedup: {speedup:.2f}x")
+                logger.warning("  %20s | speedup: %.2fx", ev, speedup)
 
     # Save CSV
     csv_path = "results/comparison.csv"
@@ -56,7 +57,7 @@ def main():
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
-    print(f"\nResults saved to {csv_path}")
+    logger.warning("Results saved to %s", csv_path)
 
     # Generate speedup plot
     fig, axes = plt.subplots(1, len(OBJECTIVES), figsize=(16, 4), sharey=True)
@@ -76,7 +77,7 @@ def main():
     plt.tight_layout()
     plot_path = "results/speedup.png"
     plt.savefig(plot_path, dpi=150)
-    print(f"Plot saved to {plot_path}")
+    logger.warning("Plot saved to %s", plot_path)
 
 if __name__ == "__main__":
     main()

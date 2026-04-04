@@ -12,7 +12,9 @@ def main() -> None:
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--evaluator", type=str)
-    parser.add_argument("--profile", action="store_true",help = "Run with cProfile and print timing report")
+    parser.add_argument("--n-workers", type=int, help="Threads (V1) or processes (V2)")
+    parser.add_argument("--chunk-size", type=int, help="Batch size for V2 (multiprocessing)")
+    parser.add_argument("--profile", action="store_true", help="Run with cProfile and print timing report")
     args = parser.parse_args() #read users arguments
 
     cfg =  PSOConfig.from_yaml(args.config)
@@ -25,6 +27,10 @@ def main() -> None:
         cfg.seed = args.seed
     if args.evaluator is not None:
         cfg.evaluator = args.evaluator
+    if args.n_workers is not None:
+        cfg.n_workers = args.n_workers
+    if args.chunk_size is not None:
+        cfg.chunk_size = args.chunk_size
 
     if args.profile:
         import cProfile, pstats, io as _io
@@ -34,13 +40,14 @@ def main() -> None:
         pr.disable()
         s = _io.StringIO()
         pstats.Stats(pr, stream=s).sort_stats("cumulative").print_stats(15)
-        print(s.getvalue())
+        logging.getLogger(__name__).info("cProfile report:\n%s", s.getvalue())
     else:
         result = run_pso_from_config(cfg)
 
-    print("Objective: ", cfg.objective, "| Dim: ", cfg.dim, " | Seed: ", cfg.seed)
-    print("Best value: ",  result.best_value)
-    print("Best position (first 5 dimensions): ", result.best_position[:5])
+    logger = logging.getLogger(__name__)
+    logger.info("Objective: %s | Dim: %d | Seed: %d", cfg.objective, cfg.dim, cfg.seed)
+    logger.info("Best value: %.6e", result.best_value)
+    logger.info("Best position (first 5 dims): %s", result.best_position[:5])
 
 
 if __name__ == "__main__":

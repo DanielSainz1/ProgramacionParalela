@@ -1,6 +1,11 @@
 import argparse
+import logging
+
 from pso.experiments.config import PSOConfig
 from pso.experiments.grid_search import grid_search
+
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s | %(message)s")
+logger = logging.getLogger(__name__)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Grid Search")
@@ -22,7 +27,7 @@ def main() -> None:
     seeds = [42, 99, 123]
     grid_search(cfg, w_values, c1_values, c2_values, seeds)
 
-    print("Grid search completed. Results in results/grid_search.csv")
+    logger.warning("Grid search completed. Results in results/grid_search.csv")
 
 if __name__ == "__main__":
     main()

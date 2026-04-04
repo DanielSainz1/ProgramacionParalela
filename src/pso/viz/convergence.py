@@ -1,4 +1,7 @@
+import logging
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
 
 
 def plot_convergence(
@@ -22,6 +25,6 @@ def plot_convergence(
     if out_path is not None:
         plt.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close()
-        print(f"Gráfica guardada en: {out_path}")
+        logger.info("Gráfica guardada en: %s", out_path)
     else:
         plt.show()

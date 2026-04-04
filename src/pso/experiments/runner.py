@@ -22,7 +22,11 @@ def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSORe
 
     #First get's the class and then makes an object of the class
     evaluator_cls = EVALUATORS[cfg.evaluator]
-    evaluator = evaluator_cls(objective)
+    evaluator = evaluator_cls(
+        objective,
+        max_workers=cfg.n_workers,
+        chunksize=cfg.chunk_size,
+    )
 
     return run_pso(objective, cfg.dim, cfg.n_particles, cfg.max_iter,
     cfg.w, cfg.c1, cfg.c2, lower, upper, evaluator, seed=cfg.seed,

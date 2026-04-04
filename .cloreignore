@@ -1,0 +1,9 @@
+results/
+*.gif
+*.mp4
+*.png
+*.csv
+__pycache__/
+*.pyc
+.git/
+docs_profesor/

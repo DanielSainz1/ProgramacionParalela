@@ -1,7 +1,12 @@
+import logging
+
 from pso.experiments.config import PSOConfig
 from pso.experiments.runner import run_pso_from_config
 from pso.io.persistence import save_run
 from pso.objectives import BOUNDS
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logger = logging.getLogger(__name__)
 
 BENCHMARK_SUITE = [
     ("sphere", [2, 10, 30]),
@@ -33,7 +38,7 @@ def main():
 
                 result = run_pso_from_config(cfg)
                 save_run(cfg, result)
-                print(f"{objective:12s} d={dim:2d} {evaluator:>16s} best={result.best_value:.4e}")
+                logger.info("%s d=%2d %16s best=%.4e", objective, dim, evaluator, result.best_value)
 
 if __name__ == "__main__":
     main()

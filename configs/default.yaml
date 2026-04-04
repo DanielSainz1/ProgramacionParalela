@@ -9,3 +9,5 @@ lower: -100.0
 upper: 100.0
 seed: 42
 evaluator: sequential
+n_workers: 4
+chunk_size: 10

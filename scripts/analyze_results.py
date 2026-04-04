@@ -1,8 +1,12 @@
 import argparse
 import csv
 import json
+import logging
 from pathlib import Path
 import matplotlib.pyplot as plt
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def load_runs(results_dir, objective=None, dim=None, evaluator=None):
@@ -53,7 +57,7 @@ def load_runs(results_dir, objective=None, dim=None, evaluator=None):
 def plot_convergence_comparison(runs, out_path=None):
     """Plot convergence curves for all loaded runs on the same axes."""
     if not runs:
-        print("No runs found.")
+        logger.warning("No runs found.")
         return
 
     plt.figure(figsize=(10, 6))
@@ -73,7 +77,7 @@ def plot_convergence_comparison(runs, out_path=None):
     if out_path:
         plt.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close()
-        print(f"Convergencia guardada en: {out_path}")
+        logger.info("Convergencia guardada en: %s", out_path)
     else:
         plt.show()
 
@@ -81,7 +85,7 @@ def plot_convergence_comparison(runs, out_path=None):
 def plot_boxplot(runs, out_path=None):
     """Boxplot of final best fitness grouped by evaluator."""
     if not runs:
-        print("No runs found.")
+        logger.warning("No runs found.")
         return
 
     # Group final values by evaluator
@@ -104,7 +108,7 @@ def plot_boxplot(runs, out_path=None):
     if out_path:
         plt.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close()
-        print(f"Boxplot guardado en: {out_path}")
+        logger.info("Boxplot guardado en: %s", out_path)
     else:
         plt.show()
 
@@ -112,14 +116,17 @@ def plot_boxplot(runs, out_path=None):
 def print_summary_table(runs):
     """Print a text summary table of all runs."""
     if not runs:
-        print("No runs found.")
+        logger.warning("No runs found.")
         return
 
-    print(f"\n{'Objective':12s} {'Dim':>4s} {'Evaluator':>14s} {'Seed':>6s} {'Best Value':>14s}")
-    print("-" * 56)
+    header = f"\n{'Objective':12s} {'Dim':>4s} {'Evaluator':>14s} {'Seed':>6s} {'Best Value':>14s}"
+    logger.info(header)
+    logger.info("-" * 56)
     for run in runs:
         cfg = run["config"]
-        print(f"{cfg['objective']:12s} {cfg['dim']:4d} {cfg.get('evaluator', 'seq'):>14s} {cfg['seed']:6d} {run['history'][-1]:14.4e}")
+        logger.info("%12s %4d %14s %6d %14.4e",
+                     cfg['objective'], cfg['dim'], cfg.get('evaluator', 'seq'),
+                     cfg['seed'], run['history'][-1])
 
 
 def main():
@@ -132,7 +139,7 @@ def main():
     args = parser.parse_args()
 
     runs = load_runs(args.results_dir, args.objective, args.dim, args.evaluator)
-    print(f"Encontrados {len(runs)} runs")
+    logger.info("Encontrados %d runs", len(runs))
 
     if not runs:
         return

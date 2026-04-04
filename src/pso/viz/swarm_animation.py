@@ -1,10 +1,10 @@
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from typing import Callable
 
-"""
-"""
+logger = logging.getLogger(__name__)
 
 def animate_swarm_2d(
     position_history: list,
@@ -48,4 +48,4 @@ def animate_swarm_2d(
 
     ani.save(out_path, writer="pillow", fps=fps)
     plt.close()
-    print(f"Animación guardada en: {out_path}")
+    logger.info("Animación guardada en: %s", out_path)

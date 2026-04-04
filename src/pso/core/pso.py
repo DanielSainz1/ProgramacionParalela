@@ -22,6 +22,7 @@ class PSOResult:
     total_time: float
     eval_time: float
     update_time: float
+    overhead: float          # total - eval - update (gestión del enjambre, logging, etc.)
 
 
 def run_pso(objective: Callable[[np.ndarray], float],
@@ -50,7 +51,9 @@ def run_pso(objective: Callable[[np.ndarray], float],
     t_eval = 0.0
     t_update = 0.0
 
+    t0 = time.perf_counter()
     fitness = evaluator.evaluate(positions)
+    t_eval += time.perf_counter() - t0
 
     state = SwarmState(
         positions=positions,
@@ -116,7 +119,9 @@ def run_pso(objective: Callable[[np.ndarray], float],
     logger.info("PSO done: best=%.6e", state.gbest_value)
 
     total_time = time.perf_counter() - t_start
-    logger.info("Times: total=%.4fs, eval=%.4fs, update=%.4fs", total_time, t_eval, t_update)
+    overhead = total_time - t_eval - t_update
+    logger.info("Times: total=%.4fs, eval=%.4fs, update=%.4fs, overhead=%.4fs",
+                total_time, t_eval, t_update, overhead)
 
     return PSOResult(
         best_position=state.gbest_position,
@@ -127,4 +132,5 @@ def run_pso(objective: Callable[[np.ndarray], float],
         total_time=total_time,
         eval_time=t_eval,
         update_time=t_update,
+        overhead=overhead,
     )
