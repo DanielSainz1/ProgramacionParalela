@@ -4,6 +4,7 @@ import numpy as np
 
 @dataclass
 class SwarmState:
+    """Holds all the mutable state of the swarm (positions, velocities, bests)."""
     positions: np.ndarray
     velocities: np.ndarray
     pbest_positions: np.ndarray

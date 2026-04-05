@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PSOResult:
+    """Stores the result of a PSO run: best solution, convergence history and timing."""
     best_position: np.ndarray
     best_value: float
     best_history: List[float]
@@ -22,7 +23,7 @@ class PSOResult:
     total_time: float
     eval_time: float
     update_time: float
-    overhead: float          # total - eval - update (gestión del enjambre, logging, etc.)
+    overhead: float          # total - eval - update (swarm management, logging, etc.)
 
 
 def run_pso(objective: Callable[[np.ndarray], float],
@@ -39,8 +40,12 @@ def run_pso(objective: Callable[[np.ndarray], float],
     tol: float = 1e-10,
     stagnation: int = 50,
     record_positions: bool = False,) -> PSOResult:
+    """Run the PSO algorithm.
 
-    
+    The evaluator is injected so the same loop works for V0, V1 and V2.
+    Returns a PSOResult with the best solution found, the convergence
+    history and a timing breakdown (eval, update, overhead).
+    """
     rng = np.random.default_rng(seed)
     logger.info("PSO start: %d particles, dim=%d, iters=%d", n_particles, d, iters)
     positions = rng.uniform(lower, upper, size=(n_particles, d))
@@ -67,8 +72,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
     best_history = [state.gbest_value]
     position_history = []
     gbest_position_history = []
-    no_improve = 0
-    
+    no_improve = 0  # contador de estancamiento
 
     for _ in range(iters):
         r1 = rng.random((n_particles, d))

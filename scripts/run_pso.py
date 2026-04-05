@@ -7,18 +7,19 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run PSO")
-    parser.add_argument("--objective", type = str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"]) #define accepted arguments
+    parser.add_argument("--objective", type=str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"])
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--evaluator", type=str)
-    parser.add_argument("--n-workers", type=int, help="Threads (V1) or processes (V2)")
-    parser.add_argument("--chunk-size", type=int, help="Batch size for V2 (multiprocessing)")
-    parser.add_argument("--profile", action="store_true", help="Run with cProfile and print timing report")
-    args = parser.parse_args() #read users arguments
+    parser.add_argument("--n-workers", type=int, help="hilos (V1) o procesos (V2)")
+    parser.add_argument("--chunk-size", type=int, help="batch size para V2")
+    parser.add_argument("--profile", action="store_true", help="ejecutar con cProfile")
+    args = parser.parse_args()
 
-    cfg =  PSOConfig.from_yaml(args.config)
+    cfg = PSOConfig.from_yaml(args.config)
 
+    # sobreescribir los campos que se pasen por CLI
     if args.objective is not None:
         cfg.objective = args.objective
     if args.dim is not None:

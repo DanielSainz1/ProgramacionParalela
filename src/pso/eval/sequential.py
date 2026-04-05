@@ -5,17 +5,12 @@ from .base import BaseEvaluator
 
 
 class SequentialEvaluator(BaseEvaluator):
-    """V0 — Evaluador secuencial (baseline).
-
-    Evalúa cada partícula en un bucle for simple, sin ningún tipo de
-    paralelismo.  Es la opción más rápida cuando la función objetivo es
-    barata (microsegundos) porque no incurre en overhead de creación de
-    hilos ni procesos, ni en serialización (pickling) de datos.
+    """V0 — Sequential evaluator (baseline).
+    Evaluates each particle one by one in a for loop. No parallelism.
     """
 
     def __init__(self, objective: Callable[[np.ndarray], float], **kwargs):
-        # **kwargs permite que runner.py pase max_workers/chunksize
-        # sin que SequentialEvaluator se rompa.
+        # **kwargs so runner.py can pass max_workers/chunksize without crashing
         self.objective = objective
 
     def evaluate(self, positions: np.ndarray) -> np.ndarray:

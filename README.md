@@ -31,6 +31,10 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 | `python scripts/run_grid_search.py --objective sphere --dim 2` | Grid search over w, c1, c2 |
 | `python scripts/run_comparison.py` | Speedup comparison V0 vs V1 vs V2 |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
+| `python scripts/make_viz.py --run-dir results/<folder>/ --type convergence` | Only convergence plot |
+| `python scripts/analyze_results.py --results-dir results/` | Convergence comparison, boxplot, summary table |
+| `python scripts/analyze_results.py --evaluator threading` | Filter analysis by evaluator |
+| `python scripts/run_evaluator_demo.py` | Quick demo of SequentialEvaluator |
 | `pytest` | Run unit tests |
 
 ---
@@ -71,10 +75,12 @@ src/pso/
 
 scripts/
 ├── run_pso.py          # Single run CLI (argparse)
-├── run_benchmarks.py   # Full benchmark suite (4 obj x 3 dims)
+├── run_benchmarks.py   # Full benchmark suite (4 obj x 3 dims x 3 evaluators)
 ├── run_grid_search.py  # Hyperparameter grid search
 ├── run_comparison.py   # Speedup comparison V0 vs V1 vs V2
-└── make_viz.py         # Generate convergence plots + swarm animations
+├── make_viz.py         # Generate convergence plots + swarm animations
+├── analyze_results.py  # Convergence comparison, boxplots, summary table
+└── run_evaluator_demo.py # Quick demo of evaluator usage
 
 configs/
 └── default.yaml        # Default PSO parameters

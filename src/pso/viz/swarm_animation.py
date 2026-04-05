@@ -15,7 +15,7 @@ def animate_swarm_2d(
     out_path: str = "results/swarm.gif",
     fps: int = 10,
 ) -> None:
-    
+    """Generate a GIF of the swarm moving in 2D. Shows contour + particles + gbest."""
     grid_points = np.linspace(lower, upper, 200)
     X, Y = np.meshgrid(grid_points, grid_points)
     Z = np.array([[objective(np.array([x, y])) for x in grid_points] for y in grid_points])
@@ -36,7 +36,7 @@ def animate_swarm_2d(
         positions = position_history[frame]           
         particles_plot.set_data(positions[:, 0], positions[:, 1])
         gbest_plot.set_data([gbest_history[frame][0]], [gbest_history[frame][1]])
-        title.set_text(f"Iteración {frame + 1} / {len(position_history)}")
+        title.set_text(f"Iteration {frame + 1} / {len(position_history)}")
         return particles_plot, gbest_plot, title
 
     ani = animation.FuncAnimation(
@@ -48,4 +48,4 @@ def animate_swarm_2d(
 
     ani.save(out_path, writer="pillow", fps=fps)
     plt.close()
-    logger.info("Animación guardada en: %s", out_path)
+    logger.info("Animation saved to: %s", out_path)

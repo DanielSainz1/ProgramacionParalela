@@ -4,31 +4,13 @@ from .base import BaseEvaluator
 
 
 class ThreadingEvaluator(BaseEvaluator):
-    """V1 — Evaluador multihilo con ThreadPoolExecutor.
+    """V1 — Threaded evaluator using ThreadPoolExecutor.
 
-    Utiliza ``concurrent.futures.ThreadPoolExecutor`` y su método
-    ``executor.map()`` para evaluar las partículas en paralelo mediante
-    hilos (threads).  Cada hilo ejecuta la función objetivo sobre un
-    subconjunto de partículas.
-
-    Cuándo mejora vs secuencial
-    ---------------------------
-    - **Mejora** en tareas I/O-bound (llamadas a red, lectura de ficheros)
-      porque los hilos liberan el GIL durante las operaciones de espera.
-    - **Mejora parcial** cuando la función objetivo usa NumPy/C internamente,
-      ya que NumPy libera el GIL durante operaciones vectorizadas pesadas.
-    - **No mejora** (o empeora) en código Python puro CPU-bound, porque el
-      GIL (Global Interpreter Lock) impide la ejecución simultánea de
-      bytecode Python: los hilos compiten por el GIL y el overhead de
-      context-switching añade latencia sin beneficio.
-
-    Parámetros
-    ----------
-    objective : callable
-        Función objetivo que recibe un vector ``np.ndarray`` y devuelve un
-        ``float``.
-    max_workers : int
-        Número de hilos en el pool.  Configurable desde ``PSOConfig.n_workers``.
+    Uses threads to evaluate particles in parallel. In practice this
+    doesn't speed things up for our benchmark functions because of the GIL
+    (Global Interpreter Lock) — Python only runs one thread at a time for
+    CPU-bound code. It would help if the objective did I/O or heavy NumPy
+    operations that release the GIL.
     """
 
     def __init__(self, objective, max_workers=4, **kwargs):

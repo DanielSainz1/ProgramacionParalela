@@ -5,7 +5,7 @@ from dataclasses import dataclass
 @dataclass
 class PSOConfig:
     objective: str          # sphere, rosenbrock, rastrigin, ackley
-    dim: int                # dimensiones del espacio de búsqueda
+    dim: int                # search space dimensions
     n_particles: int
     max_iter: int
     w: float
@@ -17,8 +17,8 @@ class PSOConfig:
     seed: int = 42
     tol: float = 1e-10
     stagnation: int = 50
-    n_workers: int = 4              # hilos (V1) o procesos (V2)
-    chunk_size: int = 10            # tamaño de lote para V2 (batching)
+    n_workers: int = 4              # threads (V1) or processes (V2)
+    chunk_size: int = 10            # batch size for V2 (batching)
 
     @classmethod
     def from_yaml(cls, path: str)-> PSOConfig:

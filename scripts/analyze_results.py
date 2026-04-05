@@ -67,9 +67,9 @@ def plot_convergence_comparison(runs, out_path=None):
         label = f"{cfg['objective']} d={cfg['dim']} s={cfg['seed']} ({cfg.get('evaluator', 'seq')})"
         plt.plot(run["history"], label=label, alpha=0.8)
 
-    plt.xlabel("Iteración")
-    plt.ylabel("Mejor valor (escala log)")
-    plt.title("Comparación de convergencia")
+    plt.xlabel("Iteration")
+    plt.ylabel("Best value (log scale)")
+    plt.title("Convergence comparison")
     plt.yscale("log")
     plt.legend(fontsize=8)
     plt.grid(True, which="both", linestyle="--", alpha=0.5)
@@ -77,7 +77,49 @@ def plot_convergence_comparison(runs, out_path=None):
     if out_path:
         plt.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close()
-        logger.info("Convergencia guardada en: %s", out_path)
+        logger.info("Convergence plot saved to: %s", out_path)
+    else:
+        plt.show()
+
+
+def plot_avg_convergence(runs, out_path=None):
+    """Plot average convergence curves grouped by evaluator, with std shading."""
+    if not runs:
+        logger.warning("No runs found.")
+        return
+
+    import numpy as np
+
+    # Group histories by evaluator
+    groups = {}
+    for run in runs:
+        evaluator = run["config"].get("evaluator", "sequential")
+        groups.setdefault(evaluator, []).append(run["history"])
+
+    plt.figure(figsize=(10, 6))
+
+    for evaluator, histories in groups.items():
+        # Pad shorter histories to the max length with their last value
+        max_len = max(len(h) for h in histories)
+        padded = np.array([h + [h[-1]] * (max_len - len(h)) for h in histories])
+        mean = padded.mean(axis=0)
+        std = padded.std(axis=0)
+        iters = np.arange(max_len)
+
+        plt.plot(iters, mean, label=f"{evaluator} (n={len(histories)})")
+        plt.fill_between(iters, mean - std, mean + std, alpha=0.2)
+
+    plt.xlabel("Iteration")
+    plt.ylabel("Best value (log scale)")
+    plt.title("Average convergence by evaluator")
+    plt.yscale("log")
+    plt.legend()
+    plt.grid(True, which="both", linestyle="--", alpha=0.5)
+
+    if out_path:
+        plt.savefig(out_path, dpi=150, bbox_inches="tight")
+        plt.close()
+        logger.info("Average convergence plot saved to: %s", out_path)
     else:
         plt.show()
 
@@ -100,15 +142,15 @@ def plot_boxplot(runs, out_path=None):
 
     plt.figure(figsize=(8, 5))
     plt.boxplot(data, tick_labels=labels)
-    plt.ylabel("Fitness final (escala log)")
+    plt.ylabel("Final fitness (log scale)")
     plt.yscale("log")
-    plt.title("Distribución de fitness final por evaluador")
+    plt.title("Final fitness distribution by evaluator")
     plt.grid(True, axis="y", linestyle="--", alpha=0.5)
 
     if out_path:
         plt.savefig(out_path, dpi=150, bbox_inches="tight")
         plt.close()
-        logger.info("Boxplot guardado en: %s", out_path)
+        logger.info("Boxplot saved to: %s", out_path)
     else:
         plt.show()
 
@@ -139,7 +181,7 @@ def main():
     args = parser.parse_args()
 
     runs = load_runs(args.results_dir, args.objective, args.dim, args.evaluator)
-    logger.info("Encontrados %d runs", len(runs))
+    logger.info("Found %d runs", len(runs))
 
     if not runs:
         return
@@ -151,8 +193,11 @@ def main():
     # Summary table
     print_summary_table(runs)
 
-    # Convergence curves
+    # Convergence curves (individual)
     plot_convergence_comparison(runs, out_path=str(out_dir / "convergence.png"))
+
+    # Average convergence curves (grouped by evaluator)
+    plot_avg_convergence(runs, out_path=str(out_dir / "avg_convergence.png"))
 
     # Boxplot
     plot_boxplot(runs, out_path=str(out_dir / "boxplot.png"))
