@@ -22,9 +22,9 @@ def animate_swarm_3d(
     ax.set_xlim(lower, upper)
     ax.set_ylim(lower, upper)
     ax.set_zlim(lower, upper)
-    ax.set_xlabel("x1")
-    ax.set_ylabel("x2")
-    ax.set_zlabel("x3")
+    ax.set_xlabel("x₁")
+    ax.set_ylabel("x₂")
+    ax.set_zlabel("x₃")
 
     particles_plot = ax.scatter([], [], [], c="white", edgecolors="blue", s=20, alpha=0.7)
     gbest_plot = ax.scatter([], [], [], c="red", marker="*", s=150)

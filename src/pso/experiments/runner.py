@@ -13,14 +13,14 @@ EVALUATORS = {
 }
 
 def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSOResult:
-    #Get the objective function from the registry
+    # Get the objective function from the registry
     objective = OBJECTIVES[cfg.objective]
 
-    #Creates arrays of size dim to set the bounds
+    # Creates arrays of size dim to set the bounds
     lower = np.full(cfg.dim, cfg.lower)
     upper = np.full(cfg.dim, cfg.upper)
 
-    #First get's the class and then makes an object of the class
+    # First get the class, then create an instance
     evaluator_cls = EVALUATORS[cfg.evaluator]
     evaluator = evaluator_cls(
         objective,

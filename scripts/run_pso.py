@@ -12,14 +12,14 @@ def main() -> None:
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--evaluator", type=str)
-    parser.add_argument("--n-workers", type=int, help="hilos (V1) o procesos (V2)")
-    parser.add_argument("--chunk-size", type=int, help="batch size para V2")
-    parser.add_argument("--profile", action="store_true", help="ejecutar con cProfile")
+    parser.add_argument("--n-workers", type=int, help="threads (V1) or processes (V2)")
+    parser.add_argument("--chunk-size", type=int, help="batch size for V2")
+    parser.add_argument("--profile", action="store_true", help="run with cProfile")
     args = parser.parse_args()
 
     cfg = PSOConfig.from_yaml(args.config)
 
-    # sobreescribir los campos que se pasen por CLI
+    # override config fields from CLI args
     if args.objective is not None:
         cfg.objective = args.objective
     if args.dim is not None:

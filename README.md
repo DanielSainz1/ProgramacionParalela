@@ -27,7 +27,7 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 | `python scripts/run_pso.py --evaluator threading` | Choose evaluator (sequential, threading, multiprocessing) |
 | `python scripts/run_pso.py --profile` | Profile execution with cProfile |
 | `python scripts/run_pso.py --config configs/default.yaml` | Load custom config |
-| `python scripts/run_benchmarks.py` | Full benchmark: 4 functions x 3 dims = 12 runs |
+| `python scripts/run_benchmarks.py` | Full benchmark: 4 functions x 3 dims x 3 evaluators = 36 runs |
 | `python scripts/run_grid_search.py --objective sphere --dim 2` | Grid search over w, c1, c2 |
 | `python scripts/run_comparison.py` | Speedup comparison V0 vs V1 vs V2 |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
@@ -71,7 +71,8 @@ src/pso/
 │
 └── viz/                # Visualization
     ├── convergence.py      # plot_convergence() — best fitness vs iteration
-    └── swarm_animation.py  # animate_swarm_2d() — particle movement GIF
+    ├── swarm_animation.py  # animate_swarm_2d() — particle movement GIF
+    └── swarm_3d.py         # animate_swarm_3d() — 3D particle movement GIF
 
 scripts/
 ├── run_pso.py          # Single run CLI (argparse)
@@ -221,6 +222,9 @@ pytest
 | `test_bounds` | Particles never escape search bounds |
 | `test_monotonic_gbest` | Global best fitness never worsens across iterations |
 | `test_sphere_convergence` | Converges to ~0 on sphere with reasonable parameters |
+| `test_v0_v1_same_result` | V0 and V1 give exactly the same result (threading preserves order) |
+| `test_v0_v2_comparable_result` | V0 and V2 give equivalent results (tolerance 1e-12 for IPC) |
+| `test_grid_search_generates_csv` | Grid search produces a valid CSV with correct columns |
 
 ---
 

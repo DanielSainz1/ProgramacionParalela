@@ -3,6 +3,8 @@ import csv
 import json
 import logging
 from pathlib import Path
+
+import numpy as np
 import matplotlib.pyplot as plt
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -87,8 +89,6 @@ def plot_avg_convergence(runs, out_path=None):
     if not runs:
         logger.warning("No runs found.")
         return
-
-    import numpy as np
 
     # Group histories by evaluator
     groups = {}

@@ -11,5 +11,5 @@ EVALUATOR = SequentialEvaluator(sphere)
 #Makes sure that the particles of the best position are within the bounds.
 def test_bounds():
     seed = 12345
-    result = run_pso(sphere,D,20,100,0.719,1.49445,1.49445,LOWER,UPPER,EVALUATOR,seed)
+    result = run_pso(sphere, D, 20, 100, 0.719, 1.49445, 1.49445, LOWER, UPPER, EVALUATOR, seed)
     assert np.all(result.best_position >= LOWER) and np.all(result.best_position <= UPPER)

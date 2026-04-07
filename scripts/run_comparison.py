@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from pso.experiments.config import PSOConfig
 from pso.experiments.runner import run_pso_from_config
 
-logging.basicConfig(level=logging.WARNING, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
+logging.getLogger("pso").setLevel(logging.WARNING)  # silenciar logs internos del PSO
 logger = logging.getLogger(__name__)
 
 EVALUATORS = ["sequential", "threading", "multiprocessing"]
@@ -20,7 +21,7 @@ def main():
         for dim in DIMS:
             cfg.objective = obj
             cfg.dim = dim
-            logger.warning("=== %s | dim=%d ===", obj, dim)
+            logger.info("=== %s | dim=%d ===", obj, dim)
 
             times = {}
             for ev in EVALUATORS:
@@ -44,12 +45,12 @@ def main():
                     "speedup": round(speedup, 2),
                 }
                 rows.append(row)
-                logger.warning("  %20s | %.4fs | eval=%.4fs | update=%.4fs | best=%.6e", ev, elapsed, result.eval_time, result.update_time, result.best_value)
+                logger.info("  %20s | %.4fs | eval=%.4fs | update=%.4fs | best=%.6e", ev, elapsed, result.eval_time, result.update_time, result.best_value)
 
             base = times["sequential"]
             for ev in EVALUATORS:
                 speedup = base / times[ev]
-                logger.warning("  %20s | speedup: %.2fx", ev, speedup)
+                logger.info("  %20s | speedup: %.2fx", ev, speedup)
 
     # Save CSV
     csv_path = "results/comparison.csv"
@@ -57,7 +58,7 @@ def main():
         writer = csv.DictWriter(f, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
-    logger.warning("Results saved to %s", csv_path)
+    logger.info("Results saved to %s", csv_path)
 
     # Generate speedup plot
     fig, axes = plt.subplots(1, len(OBJECTIVES), figsize=(16, 4), sharey=True)
@@ -77,7 +78,7 @@ def main():
     plt.tight_layout()
     plot_path = "results/speedup.png"
     plt.savefig(plot_path, dpi=150)
-    logger.warning("Plot saved to %s", plot_path)
+    logger.info("Plot saved to %s", plot_path)
 
 if __name__ == "__main__":
     main()

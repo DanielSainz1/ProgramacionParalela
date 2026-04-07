@@ -9,14 +9,14 @@ from .metadata import get_git_hash, get_hardware_info
 
 def save_run(cfg: PSOConfig, result: PSOResult, out_dir: str = "results/") -> Path:
     """Save a PSO run to disk (config.json + metrics.csv in a timestamped folder)."""
-    # nombre de la carpeta con timestamp para que no se pisen
+    # timestamped folder name to avoid collisions
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     folder_name = f"{timestamp}_{cfg.objective}_d{cfg.dim}_s{cfg.seed}"
 
     run_dir = Path(out_dir) / folder_name
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    # guardar config + tiempos + resultado + metadata
+    # save config + timing + result + metadata
     data = {
         "pso": cfg.__dict__,
         "timing": {
@@ -38,12 +38,12 @@ def save_run(cfg: PSOConfig, result: PSOResult, out_dir: str = "results/") -> Pa
     with open(run_dir / "config.json", "w") as f:
         json.dump(data, f, indent=4)
 
-    # guardar metricas por iteracion
+    # save per-iteration metrics
     with open(run_dir / "metrics.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["iteration", "gbest_value"])
-        for i,val in enumerate(result.best_history):
-            writer.writerow([i,val])
+        for i, val in enumerate(result.best_history):
+            writer.writerow([i, val])
 
     return run_dir
 

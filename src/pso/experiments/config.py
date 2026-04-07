@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 
 
@@ -21,8 +20,8 @@ class PSOConfig:
     chunk_size: int = 10            # batch size for V2 (batching)
 
     @classmethod
-    def from_yaml(cls, path: str)-> PSOConfig:
+    def from_yaml(cls, path: str) -> "PSOConfig":
         import yaml
         with open(path) as f:
-            data = yaml.safe_load(f) 
-        return cls(**data) 
+            data = yaml.safe_load(f)
+        return cls(**data)

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Callable, List
 import numpy as np
@@ -65,16 +63,16 @@ def run_pso(objective: Callable[[np.ndarray], float],
         velocities=velocities,
         pbest_positions=positions.copy(),
         pbest_values=fitness.copy(),
-        gbest_position=positions[np.argmin(fitness)].copy(),
-        gbest_value=float(fitness[np.argmin(fitness)]),
+        gbest_position=positions[fitness.argmin()].copy(),
+        gbest_value=float(fitness.min()),
     )
 
     best_history = [state.gbest_value]
     position_history = []
     gbest_position_history = []
-    no_improve = 0  # contador de estancamiento
+    no_improve = 0  # stagnation counter
 
-    for _ in range(iters):
+    for it in range(iters):
         r1 = rng.random((n_particles, d))
         r2 = rng.random((n_particles, d))
 
@@ -114,8 +112,8 @@ def run_pso(objective: Callable[[np.ndarray], float],
             logger.info("Stopped: no improvement for %d iterations", stagnation)
             break
 
-        if _ % 50 == 0 or _ == iters-1:
-            logger.info("Iter %4d | best=%.6e", _, state.gbest_value)
+        if it % 50 == 0 or it == iters - 1:
+            logger.info("Iter %4d | best=%.6e", it, state.gbest_value)
         
         best_history.append(state.gbest_value)
         gbest_position_history.append(state.gbest_position.copy())

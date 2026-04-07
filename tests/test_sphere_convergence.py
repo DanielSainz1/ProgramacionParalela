@@ -11,5 +11,5 @@ EVALUATOR = SequentialEvaluator(sphere)
 ## To make sure sphere function converges to 0.
 def test_sphere_convergence():
     seed = 12345
-    result = run_pso(sphere,D,20,100,0.719,1.49445,1.49445,LOWER,UPPER,EVALUATOR,seed)
+    result = run_pso(sphere, D, 20, 100, 0.719, 1.49445, 1.49445, LOWER, UPPER, EVALUATOR, seed)
     assert result.best_value < 1e-6

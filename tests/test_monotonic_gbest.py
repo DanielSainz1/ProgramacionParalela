@@ -11,6 +11,6 @@ EVALUATOR = SequentialEvaluator(sphere)
 ## Makes sure best_history doesn't go up.
 def test_monotonic_gbest():
     seed = 12345
-    result = run_pso(sphere,D,20,100,0.719,1.49445,1.49445,LOWER,UPPER,EVALUATOR,seed)
+    result = run_pso(sphere, D, 20, 100, 0.719, 1.49445, 1.49445, LOWER, UPPER, EVALUATOR, seed)
     history = np.array(result.best_history)
     assert np.all(history[1:] <= history[:-1])

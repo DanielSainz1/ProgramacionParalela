@@ -23,7 +23,7 @@ def main():
             for evaluator in EVALUATORS:
                 lower, upper = BOUNDS[objective]
                 cfg = PSOConfig(
-                    evaluator = evaluator,
+                    evaluator=evaluator,
                     objective=objective,
                     dim=dim,
                     lower=lower,
