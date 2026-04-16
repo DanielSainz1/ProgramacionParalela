@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Callable, List, Optional
 import numpy as np
 import logging
 import time
 
-from .bounds import clamp_positions
+from .bounds import BoundsPolicy, ClampBounds
+from .topology import Topology, GlobalBestTopology
 from .state import SwarmState
 from ..eval.base import BaseEvaluator
 
@@ -37,18 +38,30 @@ def run_pso(objective: Callable[[np.ndarray], float],
     seed: int = 0,
     tol: float = 1e-10,
     stagnation: int = 50,
-    record_positions: bool = False,) -> PSOResult:
+    record_positions: bool = False,
+    bounds_policy: Optional[BoundsPolicy] = None,
+    topology: Optional[Topology] = None,
+) -> PSOResult:
     """Run the PSO algorithm.
 
-    The evaluator is injected so the same loop works for V0, V1 and V2.
+    The evaluator, bounds policy and topology are all injected so the same
+    loop works for V0/V1/V2, any bounds strategy (clamp, reflect, penalty)
+    and any topology (gbest, ring, von Neumann). Defaults are ClampBounds
+    and GlobalBestTopology when not provided.
+
     Returns a PSOResult with the best solution found, the convergence
     history and a timing breakdown (eval, update, overhead).
     """
+    if bounds_policy is None:
+        bounds_policy = ClampBounds(lower, upper)
+    if topology is None:
+        topology = GlobalBestTopology()
+
     rng = np.random.default_rng(seed)
     logger.info("PSO start: %d particles, dim=%d, iters=%d", n_particles, d, iters)
     positions = rng.uniform(lower, upper, size=(n_particles, d))
-    positions = clamp_positions(positions, lower, upper)
-    velocities = rng.uniform((-0.1 * (upper-lower)), (0.1 * (upper-lower)), size=(n_particles, d))
+    velocities = rng.uniform((-0.1 * (upper - lower)), (0.1 * (upper - lower)), size=(n_particles, d))
+    positions, velocities = bounds_policy.apply(positions, velocities)
 
     t_start = time.perf_counter()
     t_eval = 0.0
@@ -77,14 +90,17 @@ def run_pso(objective: Callable[[np.ndarray], float],
         r2 = rng.random((n_particles, d))
 
         t0 = time.perf_counter()
+        social_best = topology.social_best_positions(
+            state.pbest_positions, state.pbest_values, state.gbest_position
+        )
         state.velocities = (
             w * state.velocities
             + c1 * r1 * (state.pbest_positions - state.positions)
-            + c2 * r2 * (state.gbest_position - state.positions)
+            + c2 * r2 * (social_best - state.positions)
         )
 
         state.positions += state.velocities
-        state.positions = clamp_positions(state.positions, lower, upper)
+        state.positions, state.velocities = bounds_policy.apply(state.positions, state.velocities)
         t_update += time.perf_counter() - t0
 
         if record_positions:
@@ -114,7 +130,7 @@ def run_pso(objective: Callable[[np.ndarray], float],
 
         if it % 50 == 0 or it == iters - 1:
             logger.info("Iter %4d | best=%.6e", it, state.gbest_value)
-        
+
         best_history.append(state.gbest_value)
         gbest_position_history.append(state.gbest_position.copy())
 
