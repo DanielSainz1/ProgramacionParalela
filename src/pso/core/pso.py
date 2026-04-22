@@ -67,72 +67,76 @@ def run_pso(objective: Callable[[np.ndarray], float],
     t_eval = 0.0
     t_update = 0.0
 
-    t0 = time.perf_counter()
-    fitness = evaluator.evaluate(positions)
-    t_eval += time.perf_counter() - t0
-
-    state = SwarmState(
-        positions=positions,
-        velocities=velocities,
-        pbest_positions=positions.copy(),
-        pbest_values=fitness.copy(),
-        gbest_position=positions[fitness.argmin()].copy(),
-        gbest_value=float(fitness.min()),
-    )
-
-    best_history = [state.gbest_value]
-    position_history = []
-    gbest_position_history = []
-    no_improve = 0  # stagnation counter
-
-    for it in range(iters):
-        r1 = rng.random((n_particles, d))
-        r2 = rng.random((n_particles, d))
-
+    evaluator.open()
+    try:
         t0 = time.perf_counter()
-        social_best = topology.social_best_positions(
-            state.pbest_positions, state.pbest_values, state.gbest_position
-        )
-        state.velocities = (
-            w * state.velocities
-            + c1 * r1 * (state.pbest_positions - state.positions)
-            + c2 * r2 * (social_best - state.positions)
-        )
-
-        state.positions += state.velocities
-        state.positions, state.velocities = bounds_policy.apply(state.positions, state.velocities)
-        t_update += time.perf_counter() - t0
-
-        if record_positions:
-            position_history.append(state.positions.copy())
-
-        t0 = time.perf_counter()
-        fitness = evaluator.evaluate(state.positions)
+        fitness = evaluator.evaluate(positions)
         t_eval += time.perf_counter() - t0
 
-        improved_mask = fitness < state.pbest_values
-        state.pbest_positions[improved_mask] = state.positions[improved_mask]
-        state.pbest_values[improved_mask] = fitness[improved_mask]
+        state = SwarmState(
+            positions=positions,
+            velocities=velocities,
+            pbest_positions=positions.copy(),
+            pbest_values=fitness.copy(),
+            gbest_position=positions[fitness.argmin()].copy(),
+            gbest_value=float(fitness.min()),
+        )
 
-        gbest_index = np.argmin(state.pbest_values)
-        if state.pbest_values[gbest_index] < state.gbest_value:
-            state.gbest_position = state.pbest_positions[gbest_index].copy()
-            state.gbest_value = float(state.pbest_values[gbest_index])
+        best_history = [state.gbest_value]
+        position_history = []
+        gbest_position_history = []
+        no_improve = 0  # stagnation counter
 
-        if best_history[-1] - state.gbest_value < tol:
-            no_improve += 1
-        else:
-            no_improve = 0
+        for it in range(iters):
+            r1 = rng.random((n_particles, d))
+            r2 = rng.random((n_particles, d))
 
-        if no_improve >= stagnation:
-            logger.info("Stopped: no improvement for %d iterations", stagnation)
-            break
+            t0 = time.perf_counter()
+            social_best = topology.social_best_positions(
+                state.pbest_positions, state.pbest_values, state.gbest_position
+            )
+            state.velocities = (
+                w * state.velocities
+                + c1 * r1 * (state.pbest_positions - state.positions)
+                + c2 * r2 * (social_best - state.positions)
+            )
 
-        if it % 50 == 0 or it == iters - 1:
-            logger.info("Iter %4d | best=%.6e", it, state.gbest_value)
+            state.positions += state.velocities
+            state.positions, state.velocities = bounds_policy.apply(state.positions, state.velocities)
+            t_update += time.perf_counter() - t0
 
-        best_history.append(state.gbest_value)
-        gbest_position_history.append(state.gbest_position.copy())
+            if record_positions:
+                position_history.append(state.positions.copy())
+
+            t0 = time.perf_counter()
+            fitness = evaluator.evaluate(state.positions)
+            t_eval += time.perf_counter() - t0
+
+            improved_mask = fitness < state.pbest_values
+            state.pbest_positions[improved_mask] = state.positions[improved_mask]
+            state.pbest_values[improved_mask] = fitness[improved_mask]
+
+            gbest_index = np.argmin(state.pbest_values)
+            if state.pbest_values[gbest_index] < state.gbest_value:
+                state.gbest_position = state.pbest_positions[gbest_index].copy()
+                state.gbest_value = float(state.pbest_values[gbest_index])
+
+            if best_history[-1] - state.gbest_value < tol:
+                no_improve += 1
+            else:
+                no_improve = 0
+
+            if no_improve >= stagnation:
+                logger.info("Stopped: no improvement for %d iterations", stagnation)
+                break
+
+            if it % 50 == 0 or it == iters - 1:
+                logger.info("Iter %4d | best=%.6e", it, state.gbest_value)
+
+            best_history.append(state.gbest_value)
+            gbest_position_history.append(state.gbest_position.copy())
+    finally:
+        evaluator.close()
 
     logger.info("PSO done: best=%.6e", state.gbest_value)
 
