@@ -15,7 +15,7 @@ BENCHMARK_SUITE = [
     ("ackley", [2, 10, 30]),
 ]
 
-EVALUATORS = ["sequential", "threading", "multiprocessing"]
+EVALUATORS = ["sequential", "threading", "multiprocessing", "async", "vectorized"]
 
 def main():
     for objective, dims in BENCHMARK_SUITE:

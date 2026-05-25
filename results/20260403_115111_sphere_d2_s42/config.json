@@ -1,0 +1,26 @@
+{
+    "pso": {
+        "objective": "sphere",
+        "dim": 2,
+        "n_particles": 50,
+        "max_iter": 300,
+        "w": 0.719,
+        "c1": 1.49445,
+        "c2": 1.49445,
+        "lower": -100.0,
+        "upper": 100.0,
+        "evaluator": "sequential",
+        "seed": 42,
+        "tol": 1e-10,
+        "stagnation": 50
+    },
+    "meta": {
+        "git_hash": "cb25564",
+        "timestamp": "20260403_115111",
+        "hardware": {
+            "python_version": "3.12.3",
+            "platform": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+            "cpu_count": 4
+        }
+    }
+}

@@ -1,13 +1,12 @@
 """Social topologies for PSO.
 
 The topology decides which position each particle uses as its social
-reference when updating velocity. GlobalBest (canonical PSO) uses the
-swarm-wide best for every particle; local topologies (ring, von Neumann)
-would restrict the reference to each particle's neighbours.
+reference when updating velocity. Two implementations are provided:
 
-Only GlobalBestTopology is implemented in the current delivery. The ABC
-exists so ring/von-Neumann variants could be plugged in without touching
-the core loop.
+- GlobalBestTopology (gbest): every particle sees the swarm-wide best.
+  Fast convergence, prone to premature collapse on multi-modal functions.
+- RingTopology (lbest): each particle sees only its k nearest neighbours
+  in a logical ring. Slower convergence but better diversity preservation.
 """
 from abc import ABC, abstractmethod
 import numpy as np

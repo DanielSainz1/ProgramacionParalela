@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run PSO")
-    parser.add_argument("--objective", type=str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"])
+    parser.add_argument("--objective", type=str, choices=["sphere", "rosenbrock", "rastrigin", "ackley", "sir"])
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int)
     parser.add_argument("--seed", type=int)

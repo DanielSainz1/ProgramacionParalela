@@ -104,7 +104,7 @@ src/pso/
     ├── swarm_animation.py  # animate_swarm_2d() — particle movement GIF
     └── swarm_3d.py         # animate_swarm_3d() — 3D particle movement GIF
 
-tests/                  # 60 tests across 13 files
+tests/                  # 73 tests across 16 files
 ├── test_objectives.py          # f(optimum)=0, positivity, known values
 ├── test_sphere_convergence.py  # Convergence at d=2,10 across seeds
 ├── test_monotonic_gbest.py     # gbest never worsens
@@ -253,7 +253,7 @@ from 7x (Rastrigin) to 55x (Sphere) on the benchmark suite.
 pytest
 ```
 
-**60 tests across 13 files**, covering: objective function correctness,
+**73 tests across 16 files**, covering: objective function correctness,
 convergence, monotonic gbest, bounds enforcement, both bounds policies, both
 topologies, reproducibility, pool lifecycle, pickle validation, velocity
 clamping, on_iteration callback, evaluator equivalence, persistence, and grid

@@ -1,0 +1,42 @@
+{
+    "pso": {
+        "objective": "rastrigin",
+        "dim": 2,
+        "n_particles": 50,
+        "max_iter": 300,
+        "w": 0.719,
+        "c1": 1.49445,
+        "c2": 1.49445,
+        "lower": -5.12,
+        "upper": 5.12,
+        "evaluator": "vectorized",
+        "seed": 42,
+        "tol": 1e-10,
+        "stagnation": 50,
+        "vmax_ratio": null,
+        "n_workers": 4,
+        "chunk_size": 10
+    },
+    "timing": {
+        "total_time": 0.075998,
+        "eval_time": 0.017875,
+        "update_time": 0.036612,
+        "overhead": 0.021511
+    },
+    "result": {
+        "best_value": 3.552713678800501e-15,
+        "best_position": [
+            -1.6284306689834101e-09,
+            -4.700573167010055e-09
+        ]
+    },
+    "meta": {
+        "git_hash": "unknown",
+        "timestamp": "20260525_195911",
+        "hardware": {
+            "python_version": "3.12.3",
+            "platform": "Linux-6.17.0-22-generic-x86_64-with-glibc2.39",
+            "cpu_count": 4
+        }
+    }
+}

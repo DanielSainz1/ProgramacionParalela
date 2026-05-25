@@ -130,7 +130,10 @@ def run_pso(objective: Callable[[np.ndarray], float],
             if on_iteration is not None:
                 on_iteration(it, state)
 
-            if best_history[-1] - state.gbest_value < tol:
+            best_history.append(state.gbest_value)
+            gbest_position_history.append(state.gbest_position.copy())
+
+            if best_history[-2] - state.gbest_value < tol:
                 no_improve += 1
             else:
                 no_improve = 0
@@ -141,9 +144,6 @@ def run_pso(objective: Callable[[np.ndarray], float],
 
             if it % 50 == 0 or it == iters - 1:
                 logger.info("Iter %4d | best=%.6e", it, state.gbest_value)
-
-            best_history.append(state.gbest_value)
-            gbest_position_history.append(state.gbest_position.copy())
     finally:
         evaluator.close()
 
