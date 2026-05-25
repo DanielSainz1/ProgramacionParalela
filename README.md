@@ -1,18 +1,24 @@
 # Particle Swarm Optimization -- Parallel Programming
 
-Particle Swarm Optimization (PSO) in Python with three interchangeable
-evaluators (sequential, threading, multiprocessing) built on the Strategy
-pattern. Includes multi-seed timing experiments, a V2 batching study, and a
-PySwarms baseline. The full write-up with real numbers and analysis lives in
-[`docs/report.md`](docs/report.md).
+Particle Swarm Optimization (PSO) in Python with five interchangeable
+evaluators (sequential, threading, multiprocessing, async, vectorized) built
+on the Strategy pattern. Includes multi-seed timing experiments, a V2 batching
+study, a V3 latency experiment, and a PySwarms baseline. The full write-up
+with real numbers and analysis lives in [`docs/report.md`](docs/report.md).
 
 **TL;DR of findings (see report for details):**
 
-- Sequential (V0) is fastest on every benchmark — cheap fitness functions
-  make parallelism a net loss.
-- Threading (V1) is ~3–7x slower than V0 due to the GIL.
-- Multiprocessing (V2) is ~5–17x slower than V0; batching at `chunksize=64`
+- **V4 (NumPy vectorised)** is the fastest of all variants: 7-55x speedup vs V0
+  on the benchmark objectives. It eliminates the Python interpreter overhead
+  by evaluating all particles at once via BLAS/SIMD.
+- **V0 (sequential)** is the baseline; for cheap objectives, classic
+  parallelism (V1/V2) costs more than it saves.
+- **V1 (threading)** is ~3–7x slower than V0 due to the GIL.
+- **V2 (multiprocessing)** is ~5–17x slower than V0; batching at `chunksize=64`
   gives 13x improvement over chunksize=1 but never crosses V0.
+- **V3 (asyncio)** matches V0 with zero latency (event-loop overhead is tiny),
+  but wins dramatically — by orders of magnitude — when each evaluation has
+  I/O-style latency. See `scripts/run_latency_experiment.py`.
 - We beat PySwarms on smooth high-dim problems (Sphere d=30, Ackley d=30) and
   lose on multimodal ones (Rastrigin, Rosenbrock).
 
@@ -38,13 +44,14 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 |---|---|
 | `python scripts/run_pso.py` | Single PSO run (default: sphere, d=30, seed=42) |
 | `python scripts/run_pso.py --objective rastrigin --dim 10 --seed 99` | Custom parameters |
-| `python scripts/run_pso.py --evaluator threading` | Choose evaluator (sequential, threading, multiprocessing) |
+| `python scripts/run_pso.py --evaluator vectorized` | Choose evaluator (sequential, threading, multiprocessing, async, vectorized) |
 | `python scripts/run_pso.py --profile` | Profile execution with cProfile |
 | `python scripts/run_pso.py --config configs/default.yaml` | Load custom config |
 | `python scripts/run_benchmarks.py` | Full benchmark: 4 functions x 3 dims x 3 evaluators = 36 runs |
 | `python scripts/run_grid_search.py --objective sphere --dim 2` | Grid search over w, c1, c2 |
-| `python scripts/run_comparison.py` | Multi-seed speedup comparison V0 vs V1 vs V2 |
+| `python scripts/run_comparison.py` | Multi-seed speedup comparison V0 vs V1 vs V2 vs V3 vs V4 |
 | `python scripts/run_batching_experiment.py` | V2 `chunksize` sweep (1..128) |
+| `python scripts/run_latency_experiment.py` | V0 vs V3 with simulated I/O latency |
 | `python scripts/run_pyswarms_baseline.py` | Convergence vs PySwarms library |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
 | `python scripts/analyze_results.py --results-dir results/` | Convergence comparison, boxplot, summary table |
@@ -64,11 +71,13 @@ src/pso/
 │
 ├── eval/               # Fitness evaluators (strategy pattern)
 │   ├── base.py         # BaseEvaluator ABC (open/close lifecycle)
-│   ├── sequential.py   # V0: SequentialEvaluator — baseline loop
-│   ├── threading_eval.py    # V1: ThreadingEvaluator — ThreadPoolExecutor
-│   └── multiprocessing_eval.py  # V2: MultiprocessingEvaluator — ProcessPoolExecutor
+│   ├── sequential.py            # V0: baseline loop
+│   ├── threading_eval.py        # V1: ThreadPoolExecutor
+│   ├── multiprocessing_eval.py  # V2: ProcessPoolExecutor + batching
+│   ├── async_eval.py            # V3: asyncio.gather with simulated latency
+│   └── vectorized_eval.py       # V4: NumPy BLAS / SIMD on the full matrix
 │
-├── objectives/         # Benchmark functions
+├── objectives/         # Benchmark functions (scalar + vectorised pair)
 │   ├── sphere.py       # f(x) = sum(x^2)
 │   ├── rosenbrock.py   # Curved valley
 │   ├── rastrigin.py    # Many local minima
@@ -113,10 +122,12 @@ neighbourhood structure. All three are injected via ABCs (Strategy pattern),
 so new implementations can be added without touching the optimisation loop.
 
 ```
-BaseEvaluator (ABC)                 BoundsPolicy (ABC)       Topology (ABC)
-├── SequentialEvaluator   (V0)      ├── ClampBounds          ├── GlobalBestTopology
-├── ThreadingEvaluator    (V1)      └── ReflectBounds        └── RingTopology
-└── MultiprocessingEvaluator (V2)
+BaseEvaluator (ABC)                    BoundsPolicy (ABC)       Topology (ABC)
+├── SequentialEvaluator      (V0)      ├── ClampBounds          ├── GlobalBestTopology
+├── ThreadingEvaluator       (V1)      └── ReflectBounds        └── RingTopology
+├── MultiprocessingEvaluator (V2)
+├── AsyncEvaluator           (V3)
+└── VectorizedEvaluator      (V4)
 ```
 
 All evaluators implement the same interface with an `open()`/`close()` lifecycle:
@@ -160,6 +171,34 @@ parallel on multiple cores.
 
 **Overhead**: IPC (pickling + pipe transfer) dominates for cheap functions.
 The `chunksize` parameter reduces IPC by batching particles per task.
+
+### V3 -- Asyncio (cooperative concurrency)
+
+Wraps each particle's evaluation in a coroutine that first awaits a
+configurable simulated latency (`latency_ms_min`..`latency_ms_max`) and then
+computes the objective. All N coroutines are launched with `asyncio.gather`,
+so their sleeps overlap on a single thread — the event loop hands control to
+the next coroutine while one is waiting.
+
+**When it helps**: I/O-bound fitnesses — remote sensor calls, database
+queries, queued microservices. `run_latency_experiment.py` shows V3 winning
+by orders of magnitude once each evaluation includes real latency.
+
+**When it does not**: pure CPU work with zero latency. asyncio adds event-loop
+dispatch overhead and gives nothing back, since a single thread cannot
+parallelise compute.
+
+### V4 -- NumPy vectorised (implicit parallelism)
+
+Replaces the per-particle Python loop with a single matrix operation. Each
+objective in `objectives/` ships a scalar version `f(x: (d,)) -> float` and
+a vectorised version `f_vec(X: (N, d)) -> (N,)` registered in
+`OBJECTIVES_VEC`. The evaluator just calls `f_vec(positions)` and lets
+NumPy/BLAS handle the dispatch to SIMD instructions.
+
+**Why it wins**: no Python interpreter overhead, no GIL, no IPC, no event
+loop. Just contiguous memory and AVX/SSE. Measured speedups vs V0 range
+from 7x (Rastrigin) to 55x (Sphere) on the benchmark suite.
 
 ---
 

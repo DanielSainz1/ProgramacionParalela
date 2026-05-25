@@ -37,8 +37,8 @@ class AsyncEvaluator(BaseEvaluator):
     def __init__(
         self,
         objective: Callable[[np.ndarray], float],
-        latency_ms_min: float = 5.0,
-        latency_ms_max: float = 50.0,
+        latency_ms_min: float = 0.0,
+        latency_ms_max: float = 0.0,
         latency_seed: Optional[int] = None,
         **kwargs,  # absorb max_workers / chunksize from the runner
     ):

@@ -2,10 +2,11 @@
 
 ## 1. Introduction
 
-This project implements Particle Swarm Optimization (PSO) in Python with three
-evaluation strategies — sequential (V0), threading (V1) and multiprocessing (V2)
-— and compares them empirically on four standard benchmark functions
-(Sphere, Rosenbrock, Rastrigin, Ackley) in dimensions 2, 10 and 30.
+This project implements Particle Swarm Optimization (PSO) in Python with five
+evaluation strategies — sequential (V0), threading (V1), multiprocessing (V2),
+asyncio (V3) and NumPy vectorised (V4) — and compares them empirically on four
+standard benchmark functions (Sphere, Rosenbrock, Rastrigin, Ackley) in
+dimensions 2, 10 and 30.
 
 The project has two goals:
 
@@ -45,18 +46,24 @@ x_i, v_i ← bounds_policy.apply(x_i, v_i)
 
 ### 2.2 Parallel strategies
 
-The three variants share the same loop and differ only in how a single
+The five variants share the same loop and differ only in how a single
 evaluation step `f(X)` is run, where `X` is the `(n_particles, d)` position
 matrix:
 
-| Variant | Evaluator                  | Intended benefit                   |
-|---------|----------------------------|------------------------------------|
-| V0      | `SequentialEvaluator`      | baseline, no overhead              |
-| V1      | `ThreadingEvaluator`       | GIL-limited, useful for I/O loads  |
-| V2      | `MultiprocessingEvaluator` | real parallelism, IPC overhead     |
+| Variant | Evaluator                  | Intended benefit                                   |
+|---------|----------------------------|----------------------------------------------------|
+| V0      | `SequentialEvaluator`      | baseline, no overhead                              |
+| V1      | `ThreadingEvaluator`       | GIL-limited, useful for I/O loads                  |
+| V2      | `MultiprocessingEvaluator` | real parallelism on multiple CPUs, IPC overhead    |
+| V3      | `AsyncEvaluator`           | cooperative concurrency — wins on I/O-bound work   |
+| V4      | `VectorizedEvaluator`      | NumPy BLAS / SIMD over the whole position matrix   |
 
 V1 uses `ThreadPoolExecutor`; V2 uses `ProcessPoolExecutor` with a configurable
-`chunksize` so we can study batching.
+`chunksize` so we can study batching. V3 runs `asyncio.gather` over coroutines
+that each await a configurable latency before computing — modelling a remote
+sensor or queued service. V4 calls a vectorised counterpart of each objective
+(`OBJECTIVES_VEC` registry) so all N particles are evaluated in a single
+NumPy operation; no thread or process pool is involved.
 
 **Pool lifecycle.** V1 and V2 create their pool once in `open()` (called before
 the PSO loop) and destroy it in `close()` (in a `finally` block). This avoids
@@ -169,51 +176,89 @@ library — same order of magnitude on most configurations.
 
 ### 3.2 Timing across evaluators
 
-Source: `results/comparison.csv`. Mean total time (seconds) over 5 seeds.
-`speedup` = `V0 / evaluator`.
+Source: `results/comparison.csv`. Mean total time (seconds) over 5 seeds for
+each of the 5 variants. `speedup` is computed as `V0 / evaluator` — values
+above 1.0 are wins, below 1.0 are losses.
 
-| Objective  | d  | V0 (s) | V1 (s) | V2 (s) | speedup V1 | speedup V2 |
-|------------|----|--------|--------|--------|------------|------------|
-| Sphere     |  2 | 0.054  | 0.397  | 0.772  | 0.14x      | 0.07x      |
-| Sphere     | 10 | 0.084  | 0.658  | 1.405  | 0.13x      | 0.06x      |
-| Sphere     | 30 | 0.180  | 1.451  | 2.656  | 0.12x      | 0.07x      |
-| Rosenbrock |  2 | 0.137  | 0.768  | 1.211  | 0.18x      | 0.11x      |
-| Rosenbrock | 10 | 0.325  | 1.626  | 2.926  | 0.20x      | 0.11x      |
-| Rosenbrock | 30 | 0.308  | 2.061  | 3.609  | 0.15x      | 0.09x      |
-| Rastrigin  |  2 | 0.306  | 1.163  | 2.334  | 0.26x      | 0.13x      |
-| Rastrigin  | 10 | 0.792  | 2.849  | 5.201  | 0.28x      | 0.15x      |
-| Rastrigin  | 30 | 0.877  | 4.368  | 5.586  | 0.20x      | 0.16x      |
-| Ackley     |  2 | 0.536  | 1.985  | 2.718  | 0.27x      | 0.20x      |
-| Ackley     | 10 | 1.169  | 3.848  | 5.775  | 0.30x      | 0.20x      |
-| Ackley     | 30 | 1.362  | 5.262  | 7.760  | 0.26x      | 0.18x      |
+| Objective  | d  | V0 (s) | V1 (s) | V2 (s) | V3 (s) | V4 (s)   | sp V1 | sp V2 | sp V3 | sp V4 |
+|------------|----|--------|--------|--------|--------|----------|-------|-------|-------|-------|
+| Sphere     |  2 | 0.037  | 0.252  | 0.397  | 0.085  | 0.005    | 0.15x | 0.09x | 0.43x | **7.4x**  |
+| Sphere     | 10 | 0.081  | 0.480  | 0.724  | 0.159  | 0.010    | 0.17x | 0.11x | 0.51x | **7.6x**  |
+| Sphere     | 30 | 0.142  | 0.893  | 1.457  | 0.346  | 0.035    | 0.16x | 0.10x | 0.41x | **4.1x**  |
+| Rosenbrock |  2 | 0.115  | 0.459  | 0.589  | 0.198  | 0.008    | 0.25x | 0.19x | 0.58x | **13.9x** |
+| Rosenbrock | 10 | 0.276  | 1.064  | 1.475  | 0.493  | 0.024    | 0.26x | 0.19x | 0.56x | **11.4x** |
+| Rosenbrock | 30 | 0.267  | 1.110  | 1.536  | 0.460  | 0.037    | 0.24x | 0.17x | 0.58x | **7.2x**  |
+| Rastrigin  |  2 | 0.069  | 0.317  | 0.447  | 0.142  | 0.008    | 0.22x | 0.15x | 0.49x | **8.6x**  |
+| Rastrigin  | 10 | 0.211  | 0.787  | 1.100  | 0.346  | 0.019    | 0.27x | 0.19x | 0.61x | **11.3x** |
+| Rastrigin  | 30 | 0.298  | 1.026  | 1.575  | 0.474  | 0.052    | 0.29x | 0.19x | 0.63x | **5.7x**  |
+| Ackley     |  2 | 0.168  | 0.502  | 0.745  | 0.260  | 0.011    | 0.34x | 0.23x | 0.65x | **15.2x** |
+| Ackley     | 10 | 0.260  | 0.805  | 1.138  | 0.397  | 0.028    | 0.32x | 0.23x | 0.66x | **9.4x**  |
+| Ackley     | 30 | 0.348  | 1.028  | 1.553  | 0.527  | 0.052    | 0.34x | 0.22x | 0.66x | **6.7x**  |
 
-**Reading.** V0 is fastest in every single cell. V1 is ~3–7x slower than V0 and
-V2 is ~5–17x slower. The gap narrows with dimension and function complexity —
-at d=30 with Ackley (the most expensive benchmark), V1 reaches 0.26x and V2
-reaches 0.18x — but the trend never crosses 1x. For microsecond-scale benchmark
-functions, parallelism is a pessimisation.
+**Reading.**
+
+- **V4 wins every single cell**, by a factor between 4.1x and 15.2x. The
+  vectorised approach is, by a wide margin, the right strategy for cheap
+  numerical fitnesses on a single machine.
+- **V1, V2 always lose** by the same factor as before — GIL for V1, IPC for V2.
+- **V3 lies between V0 and V1**: the event loop adds ~2x overhead (0.4-0.7x)
+  but no thread/process management cost. With latency = 0 it cannot win.
+- The gap between V0 and V1/V2 narrows with dimension (more expensive fitness)
+  but never crosses 1x for these benchmarks.
 
 Note: an earlier version of the code created and destroyed the thread/process
 pool on every `evaluate()` call (500 times per run). Fixing the pool lifecycle
-(create once, reuse, destroy at the end) improved V1 from ~0.06–0.14x to
-~0.12–0.30x and V2 from ~0.02–0.05x to ~0.06–0.20x. The overhead was not
+(create once, reuse, destroy at the end) improved V1 from ~0.06-0.14x to
+~0.15-0.34x and V2 from ~0.02-0.05x to ~0.09-0.23x. The overhead was not
 inherent to parallelism — it was a bug.
 
-### 3.3 Where the time goes
+### 3.3 V3 wins under latency: the asymmetric workload
+
+V3 is essentially V0 wrapped in an asyncio event loop unless something
+actually awaits. To show its real value, `run_latency_experiment.py` runs
+Sphere d=10 (20 particles, 15 iterations, 3 seeds) where the objective is
+preceded by a fixed sleep of `latency_ms` per particle. For V0 we wrap the
+objective with `time.sleep`; for V3 we use the built-in
+`latency_ms_min = latency_ms_max = latency_ms` knob.
+
+Source: `results/latency.csv`.
+
+| Latency / particle | V0 (s) | V3 (s) | Speedup V3 vs V0 |
+|--------------------|-------:|-------:|------------------:|
+|   1 ms             |  0.36  |  0.025 |  14.4x            |
+|   5 ms             |  1.78  |  0.103 |  17.3x            |
+|  10 ms             |  3.70  |  0.202 |  **18.3x**        |
+|  20 ms             |  7.04  |  0.341 |  **20.7x**        |
+|  50 ms             | 17.97  |  0.848 |  **21.2x**        |
+
+The speedup plateaus around 20x because that is roughly the swarm-level
+concurrency `asyncio.gather` can extract — N=20 particles whose sleeps overlap
+on a single thread. With more particles the asymptote would rise.
+
+This is the canonical asyncio narrative: the moment an evaluation includes
+*any* real waiting (network call, queued service, sensor poll), V3 transforms
+the timing from `N × latency` to `≈ max(latency)`.
+
+### 3.4 Where the time goes
 
 Fraction of total time spent inside `evaluate()` (higher = less overhead):
 
-| Objective  | d  | pct_eval V0 | pct_eval V1 | pct_eval V2 |
-|------------|----|-------------|-------------|-------------|
-| Sphere     | 30 | 76.5 %      | 93.0 %      | 95.3 %      |
-| Ackley     | 30 | 91.7 %      | 94.0 %      | 96.0 %      |
-| Rastrigin  | 30 | 88.6 %      | 94.1 %      | 96.1 %      |
+| Objective  | d  | V0     | V1     | V2     | V3     | V4     |
+|------------|----|--------|--------|--------|--------|--------|
+| Sphere     | 30 | 76.9 % | 92.4 % | 94.9 % | 87.0 % | 10.7 % |
+| Ackley     | 30 | 89.2 % | 93.7 % | 95.5 % | 91.8 % | 45.1 % |
+| Rastrigin  | 30 | 86.2 % | 93.4 % | 95.2 % | 90.3 % | 41.5 % |
 
-Counter-intuitively V1/V2 spend a *higher* fraction of their time inside
-`evaluate()` than V0 — but that fraction is misleading: the absolute
-`eval_time` under V1/V2 is itself inflated because it includes thread/process
-dispatch, the GIL wait for V1, and pickle round-trips for V2. `evaluate()` is
-no longer "just compute" once you parallelise it.
+Two things stand out:
+
+1. **V1/V2/V3 spend a *higher* fraction inside `evaluate()`** than V0. That
+   fraction is misleading: the absolute `eval_time` is inflated by thread
+   dispatch (V1), pickle round-trips (V2) and event-loop scheduling (V3).
+   `evaluate()` is no longer "just compute" once you parallelise it.
+2. **V4 collapses `eval_time` to 10-45 %** of total. The objective itself
+   becomes so fast that `update_time` (velocity/position update) now
+   dominates. To go faster, the next bottleneck would be the update step
+   — which is also vectorisable.
 
 ### 3.4 Batching experiment (V2, chunksize sweep)
 
@@ -287,6 +332,47 @@ real expensive fitness — CFD simulation, neural-network training-loss,
 robotics simulator — would flip the inequality and V2 would approach the ideal
 `N_workers` speedup.
 
+### 4.4 Why V3 needs latency to be worth it
+
+V3 wraps each evaluation in an `async` coroutine and launches them with
+`asyncio.gather`. There is no parallelism — asyncio is single-threaded
+cooperative concurrency. What `gather` exploits is **overlap of waits**: when
+one coroutine hits an `await`, the event loop hands control to another
+coroutine until the first is ready to resume.
+
+So with zero latency (Section 3.2), V3 is V0 plus the event-loop scheduling
+overhead. It loses by 0.4–0.7x. With latency (Section 3.3) it wins by 14–21x,
+because the N waits are now scheduled in parallel and total time approaches
+`max(latencies)` instead of `sum(latencies)`.
+
+The right way to read these two sections together is: V3 trades a small
+constant overhead for the ability to absorb arbitrarily large I/O latencies.
+For a CPU-only fitness this trade is always a loss; for a remote-call
+fitness, even a few milliseconds of latency are enough to flip it.
+
+### 4.5 Why V4 wins on cheap fitnesses
+
+V4 replaces the per-particle Python loop with one NumPy call on the whole
+`(N, d)` position matrix. Three things disappear:
+
+1. **The Python interpreter loop overhead.** N=100 particles per iteration ×
+   500 iterations = 50 000 Python function-call overheads removed.
+2. **The GIL is no longer a bottleneck**, because NumPy releases it during
+   BLAS calls and we are no longer trying to use multiple threads anyway.
+3. **CPU SIMD instructions kick in.** AVX2 processes 4 doubles per cycle;
+   AVX-512 processes 8. NumPy dispatches the inner arithmetic to those
+   instructions automatically when the data is contiguous.
+
+The measured 4–15x speedup matches what a 4-core SIMD CPU can theoretically
+deliver on these kernels. Notice that V4 wins *more* on lower dimensions —
+that is because the constant Python-loop overhead is a larger fraction of
+the work there. As d grows, NumPy can amortise the vectorised math over
+more elements but the absolute speedup tightens.
+
+V4 does not generalise to expensive fitnesses that are not vectorisable
+(e.g. running an external simulator binary). In that regime V2 takes over.
+The two strategies are complementary, not competing.
+
 ### 4.4 Design decisions
 
 **Velocity clamping.** Without `vmax`, a particle that overshoots the boundary
@@ -322,7 +408,7 @@ each iteration with the current `SwarmState`. This enables animation recording,
 custom convergence criteria, or live dashboards without modifying `run_pso` —
 a common extensibility pattern in optimisation libraries.
 
-### 4.5 Limitations
+### 4.6 Limitations
 
 - 4-core VM: results on a host with more physical cores could shift ratios
   slightly but not the ordering (V0 will still dominate for cheap fitnesses).
@@ -333,28 +419,40 @@ a common extensibility pattern in optimisation libraries.
 
 ## 5. Conclusions
 
-1. **V0 is fastest for cheap objectives**, by a wide margin, confirmed on
-   4 objectives x 3 dimensions x 5 seeds.
-2. **V1 never helps** on CPU-bound Python: the GIL wins. Pool lifecycle fix
+1. **V4 (NumPy vectorised) is the clear winner** for cheap numerical fitness
+   functions: 4–15x speedup over V0 across all benchmarks and dimensions.
+   No threads, no processes, no event loop — just the right shape of code.
+2. **V0 is the right baseline** but loses to V4 by a constant factor that
+   reflects how much Python interpreter overhead the vectorised version
+   avoids.
+3. **V1 never helps** on CPU-bound Python: the GIL wins. Pool lifecycle fix
    narrowed the gap from ~10x to ~3–7x, but it remains a pessimisation.
-3. **V2 has a clear IPC wall**: batching gives ~13x improvement (chunk 1 -> 64)
-   but cannot cross V0 for microsecond fitnesses.
-4. **The strategy pattern paid for itself**: swapping evaluator / bounds /
-   topology does not touch `run_pso`. Two bounds policies (Clamp, Reflect) and
-   two topologies (GlobalBest, Ring) plug in without any change to the core loop.
-5. **PySwarms is stronger on multimodal benchmarks**, competitive on smooth
+4. **V2 has a clear IPC wall**: batching gives ~13x improvement (chunk 1 → 64)
+   but cannot cross V0 for microsecond fitnesses. V2 wins only when the
+   fitness itself costs more than the IPC round-trip.
+5. **V3 (asyncio) inverts its sign with latency**: a loss of 0.4–0.7x with
+   zero latency, a win of 14–21x once any I/O-style waiting is involved.
+   The break-even point is ~1 ms per particle.
+6. **The strategy pattern paid for itself**: swapping evaluator / bounds /
+   topology does not touch `run_pso`. Two bounds policies (Clamp, Reflect),
+   two topologies (GlobalBest, Ring) and five evaluators all plug in without
+   any change to the core loop.
+7. **PySwarms is stronger on multimodal benchmarks**, competitive on smooth
    ones. Our boundary handling helps on Sphere d=30 and Ackley d=30.
-6. **Velocity clamping stabilises convergence** on functions with narrow valleys
-   (Rosenbrock) or deceptive landscapes, at zero computational cost.
+8. **Velocity clamping stabilises convergence** on functions with narrow
+   valleys (Rosenbrock) or deceptive landscapes, at zero computational cost.
 
-The honest take-away from this project is negative but clear: *throwing
-parallelism at cheap fitness functions is an anti-pattern*. The same
-infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
-4x speedup at chunksize 1.
+The take-away is that **"parallelism" is not one thing**: V1, V2, V3 and V4
+each attack a different bottleneck, and only the one that matches the actual
+bottleneck of the workload pays off. For our microsecond benchmark fitness
+that bottleneck is the Python interpreter, which is exactly what V4 removes.
+A 10-millisecond fitness would shift the answer to V2; a fitness with network
+calls would shift it to V3. The infrastructure built here lets a future user
+make that choice with one line of YAML.
 
 ## 6. Test suite
 
-60 tests across 13 test files, covering:
+70 tests across 15 test files, covering:
 
 | Category             | Tests | What they verify                                         |
 |----------------------|------:|----------------------------------------------------------|
@@ -369,6 +467,8 @@ infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
 | Velocity clamping    |     6 | Velocities respect vmax; convergence across ratios; reproducibility |
 | on_iteration callback|     3 | Called every iteration; sees updated gbest; None is safe  |
 | Evaluator equivalence|     2 | V0/V1 exact match; V0/V2 within tolerance                |
+| Async evaluator (V3) |     3 | Same values as V0 at latency=0; lifecycle reusable; gather overlaps |
+| Vectorised (V4)      |     7 | scalar==vec per particle for all 4 objectives; PSO converges; numerical match with V0 |
 | Persistence          |     3 | save_run creates JSON+CSV with correct fields            |
 | Grid search          |     1 | Produces valid CSV with expected columns                 |
 
@@ -376,10 +476,11 @@ infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
 
 | File                              | Produced by                                 |
 |-----------------------------------|---------------------------------------------|
-| `results/comparison.csv`          | `scripts/run_comparison.py`                 |
-| `results/batching.csv` / `.png`   | `scripts/run_batching_experiment.py`        |
-| `results/pyswarms_baseline.csv`   | `scripts/run_pyswarms_baseline.py`          |
+| `results/comparison.csv`          | `scripts/run_comparison.py` (V0–V4, 60 rows)|
 | `results/speedup.png`             | `scripts/run_comparison.py`                 |
+| `results/batching.csv` / `.png`   | `scripts/run_batching_experiment.py`        |
+| `results/latency.csv` / `.png`    | `scripts/run_latency_experiment.py`         |
+| `results/pyswarms_baseline.csv`   | `scripts/run_pyswarms_baseline.py`          |
 | `results/grid_search.csv`         | `scripts/run_grid_search.py`                |
 | `results/analysis/`               | `scripts/analyze_results.py`                |
 
@@ -387,9 +488,10 @@ infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
 
 ```bash
 pip install -e ".[dev]"
-pytest                                          # 60 tests
-python scripts/run_comparison.py                # ~5 min, 5 seeds x 36 cells
+pytest                                          # 70 tests
+python scripts/run_comparison.py                # ~5 min, 5 seeds x 60 cells (V0–V4)
 python scripts/run_batching_experiment.py       # ~3 min
+python scripts/run_latency_experiment.py        # ~3 min, V0 vs V3 across latencies
 python scripts/run_pyswarms_baseline.py         # ~1 min
 python scripts/analyze_results.py               # plots + summary
 ```

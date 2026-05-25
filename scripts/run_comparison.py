@@ -1,8 +1,12 @@
-"""V0/V1/V2 comparison with multi-seed statistics.
+"""V0/V1/V2/V3/V4 comparison with multi-seed statistics.
 
 Runs each (objective, dim, evaluator) combination across several seeds and
 reports mean/std for time and speedup. This gives statistically meaningful
 numbers instead of single-run measurements that depend on scheduler noise.
+
+V3 (async) is included with latency=0 here so all variants face the same
+workload. The dedicated latency experiment (run_latency_experiment.py)
+shows how V3 wins once real I/O latency is involved.
 """
 import time
 import csv
@@ -19,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 logging.getLogger("pso").setLevel(logging.WARNING)  # silence PSO internal logs
 logger = logging.getLogger(__name__)
 
-EVALUATORS = ["sequential", "threading", "multiprocessing"]
+EVALUATORS = ["sequential", "threading", "multiprocessing", "async", "vectorized"]
 OBJECTIVES = ["sphere", "rosenbrock", "rastrigin", "ackley"]
 DIMS = [2, 10, 30]
 SEEDS = [42, 7, 123, 1, 99]
