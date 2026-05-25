@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Grid Search")
-    parser.add_argument("--objective", type=str, choices=["sphere", "rosenbrock", "rastrigin", "ackley"])
+    parser.add_argument("--objective", type=str,
+                        choices=["sphere", "rosenbrock", "rastrigin", "ackley", "sir"])
     parser.add_argument("--config", type=str, default="configs/default.yaml")
     parser.add_argument("--dim", type=int, default=2)
     parser.add_argument("--evaluators", type=str, nargs="+",
-                        choices=["sequential", "threading", "multiprocessing"],
+                        choices=["sequential", "threading", "multiprocessing", "async", "vectorized"],
                         default=None,
                         help="Evaluators to compare (default: config value only)")
     args = parser.parse_args()
