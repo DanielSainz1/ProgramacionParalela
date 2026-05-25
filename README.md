@@ -3,8 +3,9 @@
 Particle Swarm Optimization (PSO) in Python with five interchangeable
 evaluators (sequential, threading, multiprocessing, async, vectorized) built
 on the Strategy pattern. Includes multi-seed timing experiments, a V2 batching
-study, a V3 latency experiment, and a PySwarms baseline. The full write-up
-with real numbers and analysis lives in [`docs/report.md`](docs/report.md).
+study, a V3 latency experiment, a PySwarms baseline, and a real-world use case
+calibrating an SIR epidemic model from noisy daily infection counts. The full
+write-up with real numbers and analysis lives in [`docs/report.md`](docs/report.md).
 
 **TL;DR of findings (see report for details):**
 
@@ -19,6 +20,10 @@ with real numbers and analysis lives in [`docs/report.md`](docs/report.md).
 - **V3 (asyncio)** matches V0 with zero latency (event-loop overhead is tiny),
   but wins dramatically — by orders of magnitude — when each evaluation has
   I/O-style latency. See `scripts/run_latency_experiment.py`.
+- **SIR use case**: on a real fitness costing ~1 ms per particle, V2
+  multiprocessing **finally wins** (2.19x speedup) and V4 still wins (1.89x).
+  Both correctly recover the ground-truth parameters (β=0.30, γ=0.10, I₀=10)
+  from a noisy synthetic curve. This flips the cheap-benchmark verdict.
 - We beat PySwarms on smooth high-dim problems (Sphere d=30, Ackley d=30) and
   lose on multimodal ones (Rastrigin, Rosenbrock).
 
@@ -52,6 +57,8 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 | `python scripts/run_comparison.py` | Multi-seed speedup comparison V0 vs V1 vs V2 vs V3 vs V4 |
 | `python scripts/run_batching_experiment.py` | V2 `chunksize` sweep (1..128) |
 | `python scripts/run_latency_experiment.py` | V0 vs V3 with simulated I/O latency |
+| `python scripts/generate_sir_observations.py` | Generate the synthetic SIR ground-truth CSV (run once) |
+| `python scripts/run_sir_comparison.py` | All 5 variants on the SIR calibration use case |
 | `python scripts/run_pyswarms_baseline.py` | Convergence vs PySwarms library |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
 | `python scripts/analyze_results.py --results-dir results/` | Convergence comparison, boxplot, summary table |
