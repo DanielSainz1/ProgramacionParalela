@@ -1,13 +1,22 @@
-from .sphere import sphere
-from .rosenbrock import rosenbrock
-from .rastrigin import rastrigin
-from .ackley import ackley
+from .sphere import sphere, sphere_vec
+from .rosenbrock import rosenbrock, rosenbrock_vec
+from .rastrigin import rastrigin, rastrigin_vec
+from .ackley import ackley, ackley_vec
 
 OBJECTIVES = {
     "sphere": sphere,
     "rosenbrock": rosenbrock,
     "rastrigin": rastrigin,
     "ackley": ackley,
+}
+
+# Vectorised counterparts: each takes (N, d) and returns (N,) instead of
+# being called once per particle. Used by V4 VectorizedEvaluator.
+OBJECTIVES_VEC = {
+    "sphere": sphere_vec,
+    "rosenbrock": rosenbrock_vec,
+    "rastrigin": rastrigin_vec,
+    "ackley": ackley_vec,
 }
 
 BOUNDS = {
