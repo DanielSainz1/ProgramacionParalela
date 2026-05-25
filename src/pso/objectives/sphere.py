@@ -8,3 +8,9 @@ def sphere(x: np.ndarray) -> float:
     """
     x = np.asarray(x, dtype=float)
     return float(np.sum(x ** 2))
+
+
+def sphere_vec(X: np.ndarray) -> np.ndarray:
+    """Vectorised sphere: X of shape (N, d) -> ndarray of shape (N,)."""
+    X = np.asarray(X, dtype=float)
+    return np.sum(X ** 2, axis=-1)
