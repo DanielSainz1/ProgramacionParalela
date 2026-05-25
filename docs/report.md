@@ -21,19 +21,27 @@ in `scripts/`. No number in the tables below is hand-written.
 
 ### 2.1 PSO algorithm
 
-Canonical inertia-weight PSO with global-best topology. Each iteration:
+Canonical inertia-weight PSO. Each iteration:
 
 ```
-v_i ← w · v_i + c1 · r1 · (pbest_i − x_i) + c2 · r2 · (gbest − x_i)
+v_i ← w · v_i + c1 · r1 · (pbest_i − x_i) + c2 · r2 · (social_best_i − x_i)
+v_i ← clip(v_i, -vmax, vmax)          [optional velocity clamping]
 x_i ← x_i + v_i
+x_i, v_i ← bounds_policy.apply(x_i, v_i)
 ```
 
 - **Initialisation**: positions uniform inside `[lower, upper]^d`,
   velocities uniform inside `±10 %` of the box range.
-- **Bounds**: clamp positions and zero the velocity component on any axis that
-  hit the wall (prevents particles bouncing back and forth on a boundary).
+- **Velocity clamping (vmax)**: optional parameter `vmax_ratio` limits
+  `|v_i|` per dimension to `vmax_ratio × (upper - lower)`. Without clamping,
+  particles can accumulate extreme velocities and oscillate between boundaries
+  without exploring the interior. Typical values are 0.2–0.5.
+- **Bounds**: two interchangeable policies (see §2.3).
 - **Stopping**: max iterations, or no improvement in `gbest` for `stagnation`
   consecutive iterations (`tol = 1e-10`, `stagnation = 50`).
+- **on_iteration callback**: an optional hook `on_iteration(it, state)` is
+  called after each iteration, enabling custom logging, animation recording, or
+  metric collection without modifying the core loop.
 
 ### 2.2 Parallel strategies
 
@@ -50,19 +58,51 @@ matrix:
 V1 uses `ThreadPoolExecutor`; V2 uses `ProcessPoolExecutor` with a configurable
 `chunksize` so we can study batching.
 
+**Pool lifecycle.** V1 and V2 create their pool once in `open()` (called before
+the PSO loop) and destroy it in `close()` (in a `finally` block). This avoids
+the cost of creating and destroying a pool on every single `evaluate()` call —
+an earlier version of the code had this bug, which inflated V1 times by ~3x and
+V2 times by ~6x.
+
+**Pickle validation (V2).** `ProcessPoolExecutor` needs to serialize the
+objective function via `pickle` to send it to worker processes. If the user
+passes a lambda or closure, pickling fails with a cryptic error mid-run.
+`MultiprocessingEvaluator.open()` now validates picklability upfront and raises
+a clear `TypeError` explaining the constraint.
+
+**Batch splitting (V2).** Instead of dispatching one particle per IPC call,
+positions are split into `chunksize`-sized batches before being submitted to
+workers. Each batch is evaluated in a single `_evaluate_batch()` call inside
+the worker, reducing the number of pickle/pipe round-trips.
+
 ### 2.3 Architecture (Strategy pattern with ABCs)
 
 Three abstractions let the solver stay agnostic of implementation details:
 
-- `BaseEvaluator` — evaluates a batch of positions (`sequential` / `threading`
-  / `multiprocessing`).
-- `BoundsPolicy` — enforces box constraints (`ClampBounds`).
-- `Topology` — produces each particle's social best
-  (`GlobalBestTopology`).
+- **`BaseEvaluator`** — evaluates a batch of positions. Implementations:
+  `SequentialEvaluator` (V0), `ThreadingEvaluator` (V1),
+  `MultiprocessingEvaluator` (V2). All share an `open()`/`close()` lifecycle.
+
+- **`BoundsPolicy`** — enforces box constraints after each position update.
+  Implementations:
+  - `ClampBounds`: clips positions to `[lower, upper]` and zeroes velocity on
+    hit axes. Simple and stable — the particle stops at the wall.
+  - `ReflectBounds`: reflects positions off the boundary like a billiard ball
+    and flips the velocity sign. Conserves kinetic energy, better exploration
+    near corners, but slightly less stable convergence.
+
+- **`Topology`** — produces each particle's social-best reference position.
+  Implementations:
+  - `GlobalBestTopology` (gbest): every particle is attracted to the single
+    swarm-wide best. Fast convergence but prone to premature collapse on
+    multimodal functions.
+  - `RingTopology` (lbest): each particle only sees its `k` nearest neighbours
+    in a logical ring. Slower convergence but much better diversity preservation,
+    reducing the risk of getting trapped in local minima on Rastrigin/Ackley.
 
 `run_pso` receives all three by dependency injection, so adding a new bounds
-policy (e.g. reflection) or topology (e.g. ring) only requires a new class that
-implements the ABC — the optimisation loop does not change.
+policy or topology only requires a new class that implements the ABC — the
+optimisation loop does not change.
 
 ### 2.4 Hardware and software
 
@@ -91,7 +131,7 @@ quality). Timing is split internally into three buckets:
 | Dimensions      | 2, 10, 30                                   |
 | Particles       | 100                                         |
 | Max iterations  | 500                                         |
-| PSO coefficients| w=0.719, c1=c2=1.49445 (Clerc–Kennedy)      |
+| PSO coefficients| w=0.719, c1=c2=1.49445 (Clerc-Kennedy)      |
 | Seeds           | 5 (timing), 3 (quality baseline)            |
 | Workers         | 4 for V1/V2                                 |
 
@@ -118,14 +158,14 @@ Median best cost over 3 seeds, 500 iterations, matched hyperparameters
 | Ackley      | 30 | 1.26e-05            | 0.93                | **ours** |
 
 **Reading.** On easy unimodal problems (low dimension) PySwarms converges
-noticeably deeper — a few orders of magnitude below us. They stop at the
-underflow region while our early-stopping cuts us off earlier. On hard,
-multimodal problems (Rastrigin, Rosenbrock at d=30) PySwarms is clearly better,
-suggesting their exploration behaviour — slightly different initialisation of
-velocities and no velocity clamping after boundary hits — helps them escape
-local minima. We beat them on Sphere d=30 and Ackley d=30, which are smooth
-enough to benefit from our more aggressive wall behaviour. Overall our
-implementation is competitive but not state-of-the-art.
+noticeably deeper — several orders of magnitude below us. They run all 500
+iterations without early stopping, which lets them polish further into the
+underflow region. On multimodal problems (Rastrigin d=30, Rosenbrock d=30)
+PySwarms is clearly better, likely due to differences in velocity initialisation
+and internal handling of stagnation. We beat them on Sphere d=30 and Ackley d=30,
+where our more aggressive boundary handling (zeroing velocity on wall hits) helps
+on smooth landscapes. Overall our implementation is competitive with a mature
+library — same order of magnitude on most configurations.
 
 ### 3.2 Timing across evaluators
 
@@ -134,24 +174,30 @@ Source: `results/comparison.csv`. Mean total time (seconds) over 5 seeds.
 
 | Objective  | d  | V0 (s) | V1 (s) | V2 (s) | speedup V1 | speedup V2 |
 |------------|----|--------|--------|--------|------------|------------|
-| Sphere     |  2 | 0.07   | 1.17   | 4.83   | 0.06x      | 0.02x      |
-| Sphere     | 10 | 0.08   | 1.15   | 4.84   | 0.07x      | 0.02x      |
-| Sphere     | 30 | 0.32   | 3.30   | 12.93  | 0.10x      | 0.03x      |
-| Rosenbrock |  2 | 0.12   | 0.93   | 3.92   | 0.13x      | 0.03x      |
-| Rosenbrock | 10 | 0.27   | 2.38   | 9.68   | 0.11x      | 0.03x      |
-| Rosenbrock | 30 | 0.29   | 2.63   | 11.51  | 0.11x      | 0.03x      |
-| Rastrigin  |  2 | 0.07   | 0.65   | 2.57   | 0.10x      | 0.03x      |
-| Rastrigin  | 10 | 0.19   | 1.75   | 6.93   | 0.11x      | 0.03x      |
-| Rastrigin  | 30 | 0.25   | 2.20   | 8.98   | 0.11x      | 0.03x      |
-| Ackley     |  2 | 0.15   | 1.11   | 4.16   | 0.14x      | 0.04x      |
-| Ackley     | 10 | 0.25   | 1.87   | 7.04   | 0.13x      | 0.04x      |
-| Ackley     | 30 | 0.37   | 2.74   | 9.93   | 0.13x      | 0.04x      |
+| Sphere     |  2 | 0.054  | 0.397  | 0.772  | 0.14x      | 0.07x      |
+| Sphere     | 10 | 0.084  | 0.658  | 1.405  | 0.13x      | 0.06x      |
+| Sphere     | 30 | 0.180  | 1.451  | 2.656  | 0.12x      | 0.07x      |
+| Rosenbrock |  2 | 0.137  | 0.768  | 1.211  | 0.18x      | 0.11x      |
+| Rosenbrock | 10 | 0.325  | 1.626  | 2.926  | 0.20x      | 0.11x      |
+| Rosenbrock | 30 | 0.308  | 2.061  | 3.609  | 0.15x      | 0.09x      |
+| Rastrigin  |  2 | 0.306  | 1.163  | 2.334  | 0.26x      | 0.13x      |
+| Rastrigin  | 10 | 0.792  | 2.849  | 5.201  | 0.28x      | 0.15x      |
+| Rastrigin  | 30 | 0.877  | 4.368  | 5.586  | 0.20x      | 0.16x      |
+| Ackley     |  2 | 0.536  | 1.985  | 2.718  | 0.27x      | 0.20x      |
+| Ackley     | 10 | 1.169  | 3.848  | 5.775  | 0.30x      | 0.20x      |
+| Ackley     | 30 | 1.362  | 5.262  | 7.760  | 0.26x      | 0.18x      |
 
-**Reading.** V0 is fastest in every single cell. V1 is ~10x slower than V0 and
-V2 is ~30x slower. Speedups mildly improve with dimension — at d=30 the
-evaluation itself is slightly more expensive, so the parallel overhead eats a
-smaller fraction of total time — but the trend never crosses 1x. For
-microsecond-scale benchmark functions, parallelism is a pessimisation.
+**Reading.** V0 is fastest in every single cell. V1 is ~3–7x slower than V0 and
+V2 is ~5–17x slower. The gap narrows with dimension and function complexity —
+at d=30 with Ackley (the most expensive benchmark), V1 reaches 0.26x and V2
+reaches 0.18x — but the trend never crosses 1x. For microsecond-scale benchmark
+functions, parallelism is a pessimisation.
+
+Note: an earlier version of the code created and destroyed the thread/process
+pool on every `evaluate()` call (500 times per run). Fixing the pool lifecycle
+(create once, reuse, destroy at the end) improved V1 from ~0.06–0.14x to
+~0.12–0.30x and V2 from ~0.02–0.05x to ~0.06–0.20x. The overhead was not
+inherent to parallelism — it was a bug.
 
 ### 3.3 Where the time goes
 
@@ -159,9 +205,9 @@ Fraction of total time spent inside `evaluate()` (higher = less overhead):
 
 | Objective  | d  | pct_eval V0 | pct_eval V1 | pct_eval V2 |
 |------------|----|-------------|-------------|-------------|
-| Sphere     | 30 | 81.5 %      | 96.4 %      | 98.0 %      |
-| Ackley     | 30 | 89.0 %      | 96.6 %      | 98.2 %      |
-| Rastrigin  | 30 | 86.3 %      | 96.4 %      | 98.1 %      |
+| Sphere     | 30 | 76.5 %      | 93.0 %      | 95.3 %      |
+| Ackley     | 30 | 91.7 %      | 94.0 %      | 96.0 %      |
+| Rastrigin  | 30 | 88.6 %      | 94.1 %      | 96.1 %      |
 
 Counter-intuitively V1/V2 spend a *higher* fraction of their time inside
 `evaluate()` than V0 — but that fraction is misleading: the absolute
@@ -172,26 +218,28 @@ no longer "just compute" once you parallelise it.
 ### 3.4 Batching experiment (V2, chunksize sweep)
 
 Source: `results/batching.csv`. V2 on Ackley d=30 with 160 particles, 400
-iterations, 4 workers, 3 seeds. V0 baseline: 0.358 s.
+iterations, 4 workers, 3 seeds. V0 baseline: 0.424 s.
 
-| chunk_size | V2 time (s) | speedup vs V0 |
-|-----------:|------------:|--------------:|
-|   1        | 26.00 ± 2.53| 0.01x         |
-|   4        | 10.84 ± 0.10| 0.03x         |
-|   8        |  8.67 ± 0.14| 0.04x         |
-|  16        |  7.56 ± 0.05| 0.05x         |
-|  32        |  6.87 ± 0.12| 0.05x         |
-|  **64**    |  **6.71 ± 0.02**| **0.05x** |
-| 128        |  7.06 ± 0.19| 0.05x         |
+| chunk_size | V2 time (s)       | speedup vs V0 |
+|-----------:|------------------:|--------------:|
+|   1        | 25.59 ± 9.39      | 0.02x         |
+|   4        |  9.64 ± 1.18      | 0.04x         |
+|   8        |  5.34 ± 0.90      | 0.08x         |
+|  16        |  3.64 ± 0.50      | 0.12x         |
+|  32        |  2.29 ± 0.29      | 0.19x         |
+|  **64**    |  **1.97 ± 0.22**  | **0.22x**     |
+| 128        |  2.60 ± 0.20      | 0.16x         |
 
 **Reading.** Going from `chunksize=1` to `chunksize=64` improves V2 by roughly
-**4x** (26 s → 6.7 s). The shape is the classic IPC-amortisation curve: at
+**13x** (25.6 s -> 1.97 s). The shape is the classic IPC-amortisation curve: at
 chunk=1 every particle is one pickle round-trip; at chunk=64 each worker gets
-40 particles at once and the per-particle IPC cost drops. Past chunk=64 the
-workers start running out of work to overlap and the curve flattens / slightly
-degrades. Crucially, the *best possible* V2 (0.05x) is still 20x **slower**
-than V0: batching narrows the IPC gap but cannot cross it for functions this
-cheap.
+a batch of 40 particles at once and the per-particle IPC cost drops. Past
+chunk=64 the workers start running out of work to overlap (160 particles / 64 =
+only 2.5 batches — not enough to keep 4 workers busy) and the curve degrades.
+
+Crucially, the *best possible* V2 (0.22x) is still ~5x **slower** than V0:
+batching narrows the IPC gap dramatically but cannot close it for functions this
+cheap. The break-even point requires `T_f >> T_ipc / chunksize`.
 
 ## 4. Discussion
 
@@ -208,22 +256,21 @@ of its time waiting and the GIL is released during the wait.
 ### 4.2 Why V2 does not scale either (at this scale)
 
 `ProcessPoolExecutor` bypasses the GIL by running each worker in its own Python
-interpreter. In exchange, every `map` call:
+interpreter. In exchange, every `submit` call:
 
-1. Pickles the function arguments.
+1. Pickles the function and its arguments.
 2. Writes them to a pipe.
 3. A worker reads, unpickles, computes, pickles the result back.
 4. The main process reads and unpickles.
 
 For Sphere on `d=2`, `f(x)` is a handful of multiplications — sub-microsecond.
-The pickle round-trip takes ~100 µs per batch. Even with 4 workers running in
-parallel, the net result is a slowdown of 30–60x, exactly what the data shows.
+The pickle round-trip takes ~100 us per batch. Even with 4 workers running in
+parallel, the net result is a slowdown of 5–17x, which the data confirms.
 
-The batching sweep confirms that the issue is *per-call* overhead, not compute:
-raising `chunksize` from 1 to 64 improves V2 4x by amortising a smaller number
-of pickles over a larger number of evaluations. The curve plateaus before
-reaching V0 because the per-particle cost is still dominated by the constant
-dispatch, not by the FLOPs.
+The batching sweep shows that the issue is *per-call* overhead, not compute:
+raising `chunksize` from 1 to 64 improves V2 by 13x by amortising fewer
+pickles over more evaluations. The curve plateaus before reaching V0 because
+the per-particle cost is still dominated by the constant dispatch, not by FLOPs.
 
 ### 4.3 When parallelism would win
 
@@ -235,38 +282,95 @@ N · T_f / k  >>  T_ipc     (per worker, with k = chunksize)
 ```
 
 Rule of thumb: if an evaluation costs less than ~1 ms, don't parallelise it.
-Our benchmarks are ~1 µs each, so we are 1000x below the break-even point. A
+Our benchmarks are ~1 us each, so we are 1000x below the break-even point. A
 real expensive fitness — CFD simulation, neural-network training-loss,
 robotics simulator — would flip the inequality and V2 would approach the ideal
 `N_workers` speedup.
 
-### 4.4 Limitations
+### 4.4 Design decisions
+
+**Velocity clamping.** Without `vmax`, a particle that overshoots the boundary
+gets clamped back to the edge, but its velocity remains large. On the next
+iteration it shoots past the opposite boundary, creating a ping-pong effect that
+wastes iterations. `vmax_ratio` (default: off for backward compatibility) caps
+`|v_i|` to a fraction of the search range, stabilising convergence. The test
+`test_vmax_improves_rosenbrock_d10` confirms that clamping at ratio=0.5
+improves Rosenbrock d=10, where the narrow curved valley amplifies overshoot.
+
+**Two bounds policies.** `ClampBounds` zeroes velocity on impact — the particle
+stops at the wall and lets cognitive/social terms pull it back. `ReflectBounds`
+flips velocity and mirrors the excess distance back into the box, conserving
+kinetic energy. Both converge on Sphere d=2, but ReflectBounds explores corners
+better where ClampBounds would create dead zones.
+
+**Two topologies.** `GlobalBestTopology` converges fastest on unimodal functions
+because every particle heads straight to the global best. On multimodal
+functions like Rastrigin, this causes premature collapse — the whole swarm
+converges to the nearest local minimum. `RingTopology(k=1)` restricts each
+particle's social reference to its two neighbours in a logical ring, preserving
+diversity and letting different subgroups explore different basins.
+
+**Pickle validation.** Instead of letting `ProcessPoolExecutor` fail with a
+cryptic `PicklingError` deep inside the PSO loop, `MultiprocessingEvaluator.open()`
+validates picklability upfront. The error message explains *why* (lambdas and
+closures can't cross process boundaries) and *what to do* (use a module-level
+function). This is tested with `test_multiprocessing_rejects_lambda` and
+`test_multiprocessing_rejects_closure`.
+
+**on_iteration callback.** The hook `on_iteration(it, state)` is called after
+each iteration with the current `SwarmState`. This enables animation recording,
+custom convergence criteria, or live dashboards without modifying `run_pso` —
+a common extensibility pattern in optimisation libraries.
+
+### 4.5 Limitations
 
 - 4-core VM: results on a host with more physical cores could shift ratios
   slightly but not the ordering (V0 will still dominate for cheap fitnesses).
-- Single topology (global-best) and single bounds policy (clamp): other
-  topologies like ring explore more and might narrow the quality gap with
-  PySwarms on multimodal problems.
-- The early-stopping criterion (tol=1e-10, stagnation=50) helps wall time but
+- Early-stopping criterion (tol=1e-10, stagnation=50) helps wall time but
   hurts us versus PySwarms, which runs all 500 iterations and keeps polishing.
+- The quality gap on Rastrigin/Rosenbrock d=30 could be narrowed by combining
+  `RingTopology` with `vmax_ratio`, but systematic tuning was out of scope.
 
 ## 5. Conclusions
 
 1. **V0 is fastest for cheap objectives**, by a wide margin, confirmed on
-   4 objectives × 3 dimensions × 5 seeds.
-2. **V1 never helps** on CPU-bound Python: the GIL wins.
-3. **V2 has a clear IPC wall**: batching gives ~4x improvement but cannot
-   cross V0 for microsecond fitnesses.
+   4 objectives x 3 dimensions x 5 seeds.
+2. **V1 never helps** on CPU-bound Python: the GIL wins. Pool lifecycle fix
+   narrowed the gap from ~10x to ~3–7x, but it remains a pessimisation.
+3. **V2 has a clear IPC wall**: batching gives ~13x improvement (chunk 1 -> 64)
+   but cannot cross V0 for microsecond fitnesses.
 4. **The strategy pattern paid for itself**: swapping evaluator / bounds /
-   topology does not touch `run_pso`, and the batching experiment and PySwarms
-   baseline reused the same optimisation loop.
+   topology does not touch `run_pso`. Two bounds policies (Clamp, Reflect) and
+   two topologies (GlobalBest, Ring) plug in without any change to the core loop.
 5. **PySwarms is stronger on multimodal benchmarks**, competitive on smooth
    ones. Our boundary handling helps on Sphere d=30 and Ackley d=30.
+6. **Velocity clamping stabilises convergence** on functions with narrow valleys
+   (Rosenbrock) or deceptive landscapes, at zero computational cost.
 
 The honest take-away from this project is negative but clear: *throwing
 parallelism at cheap fitness functions is an anti-pattern*. The same
 infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
 4x speedup at chunksize 1.
+
+## 6. Test suite
+
+60 tests across 13 test files, covering:
+
+| Category             | Tests | What they verify                                         |
+|----------------------|------:|----------------------------------------------------------|
+| Objective functions  |    13 | f(optimum)=0 for all 4 functions at d=2,10; positivity; known values |
+| Convergence          |     6 | Sphere converges at d=2,10 across multiple seeds         |
+| Monotonic gbest      |     3 | Global best never worsens (sphere, ackley, high-dim)     |
+| Bounds enforcement   |     3 | All particles stay in box across all iterations          |
+| Bounds policies      |     5 | ClampBounds clips+zeroes; ReflectBounds reflects+flips; both converge |
+| Topologies           |     4 | GlobalBest broadcasts; Ring picks local best; both converge |
+| Reproducibility      |     4 | Same seed = same result; different seeds differ; all objectives |
+| Pool lifecycle       |     7 | open/close/reuse for V1,V2; pickle rejection for lambdas/closures |
+| Velocity clamping    |     6 | Velocities respect vmax; convergence across ratios; reproducibility |
+| on_iteration callback|     3 | Called every iteration; sees updated gbest; None is safe  |
+| Evaluator equivalence|     2 | V0/V1 exact match; V0/V2 within tolerance                |
+| Persistence          |     3 | save_run creates JSON+CSV with correct fields            |
+| Grid search          |     1 | Produces valid CSV with expected columns                 |
 
 ## Appendix A — Files produced
 
@@ -282,10 +386,10 @@ infrastructure, applied to a fitness that costs 10+ ms, would give the textbook
 ## Appendix B — Reproducing the experiments
 
 ```bash
-source zonaproyecto/bin/activate
-pytest                                          # 11 tests
-python scripts/run_comparison.py                # ~15 min, 5 seeds × 36 cells
-python scripts/run_batching_experiment.py       # ~2 min
+pip install -e ".[dev]"
+pytest                                          # 60 tests
+python scripts/run_comparison.py                # ~5 min, 5 seeds x 36 cells
+python scripts/run_batching_experiment.py       # ~3 min
 python scripts/run_pyswarms_baseline.py         # ~1 min
 python scripts/analyze_results.py               # plots + summary
 ```

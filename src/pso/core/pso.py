@@ -41,6 +41,8 @@ def run_pso(objective: Callable[[np.ndarray], float],
     record_positions: bool = False,
     bounds_policy: Optional[BoundsPolicy] = None,
     topology: Optional[Topology] = None,
+    vmax_ratio: Optional[float] = None,
+    on_iteration: Optional[Callable[[int, SwarmState], None]] = None,
 ) -> PSOResult:
     """Run the PSO algorithm.
 
@@ -56,6 +58,8 @@ def run_pso(objective: Callable[[np.ndarray], float],
         bounds_policy = ClampBounds(lower, upper)
     if topology is None:
         topology = GlobalBestTopology()
+
+    vmax = (upper - lower) * vmax_ratio if vmax_ratio is not None else None
 
     rng = np.random.default_rng(seed)
     logger.info("PSO start: %d particles, dim=%d, iters=%d", n_particles, d, iters)
@@ -100,6 +104,8 @@ def run_pso(objective: Callable[[np.ndarray], float],
                 + c1 * r1 * (state.pbest_positions - state.positions)
                 + c2 * r2 * (social_best - state.positions)
             )
+            if vmax is not None:
+                state.velocities = np.clip(state.velocities, -vmax, vmax)
 
             state.positions += state.velocities
             state.positions, state.velocities = bounds_policy.apply(state.positions, state.velocities)
@@ -120,6 +126,9 @@ def run_pso(objective: Callable[[np.ndarray], float],
             if state.pbest_values[gbest_index] < state.gbest_value:
                 state.gbest_position = state.pbest_positions[gbest_index].copy()
                 state.gbest_value = float(state.pbest_values[gbest_index])
+
+            if on_iteration is not None:
+                on_iteration(it, state)
 
             if best_history[-1] - state.gbest_value < tol:
                 no_improve += 1

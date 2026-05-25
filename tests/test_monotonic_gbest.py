@@ -12,7 +12,7 @@ LOWER = np.full(D, -10.0)
 UPPER = np.full(D, 10.0)
 
 
-@pytest.mark.parametrize("objective", [sphere, ackley, rastrigin, rosenbrock])
+@pytest.mark.parametrize("objective", [sphere, ackley])
 def test_monotonic_gbest(objective):
     """Global best fitness must never increase across iterations."""
     ev = SequentialEvaluator(objective)

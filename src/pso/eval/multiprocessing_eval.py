@@ -1,4 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor
+import pickle
 from typing import List, Optional, Sequence
 import numpy as np
 from .base import BaseEvaluator
@@ -38,6 +39,15 @@ class MultiprocessingEvaluator(BaseEvaluator):
 
     def open(self) -> None:
         if self._executor is None:
+            try:
+                pickle.dumps(self.objective)
+            except (pickle.PicklingError, AttributeError, TypeError) as exc:
+                raise TypeError(
+                    f"The objective function {self.objective!r} cannot be pickled. "
+                    f"ProcessPoolExecutor needs to serialize it to send to worker "
+                    f"processes. Use a module-level function instead of a lambda "
+                    f"or closure. Original error: {exc}"
+                ) from exc
             self._executor = ProcessPoolExecutor(max_workers=self.max_workers)
 
     def close(self) -> None:

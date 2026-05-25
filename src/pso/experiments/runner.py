@@ -5,11 +5,13 @@ from ..eval.sequential import SequentialEvaluator
 from ..objectives import OBJECTIVES
 from ..eval.threading_eval import ThreadingEvaluator
 from ..eval.multiprocessing_eval import MultiprocessingEvaluator
+from ..eval.async_eval import AsyncEvaluator
 
 EVALUATORS = {
     "sequential": SequentialEvaluator,
     "threading": ThreadingEvaluator,
     "multiprocessing": MultiprocessingEvaluator,
+    "async": AsyncEvaluator,
 }
 
 def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSOResult:
@@ -30,5 +32,5 @@ def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSORe
 
     return run_pso(objective, cfg.dim, cfg.n_particles, cfg.max_iter,
     cfg.w, cfg.c1, cfg.c2, lower, upper, evaluator, seed=cfg.seed,
-    tol=cfg.tol, stagnation=cfg.stagnation,
+    tol=cfg.tol, stagnation=cfg.stagnation, vmax_ratio=cfg.vmax_ratio,
     record_positions=record_positions)
