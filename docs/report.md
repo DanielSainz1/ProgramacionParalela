@@ -157,7 +157,7 @@ Median best cost over 3 seeds, 500 iterations, matched hyperparameters
 | Rosenbrock  |  2 | 9.84e-13            | 2.90e-24            | pyswarms |
 | Rosenbrock  | 10 | 1.55                | 1.20                | pyswarms |
 | Rosenbrock  | 30 | 24.17               | 1.34                | pyswarms |
-| Rastrigin   |  2 | 0.00                | 0.00                | tie      |
+| Rastrigin   |  2 | 0.00                | 0.00                | tie*     |
 | Rastrigin   | 10 | 4.97                | 0.99                | pyswarms |
 | Rastrigin   | 30 | 84.57               | 24.90               | pyswarms |
 | Ackley      |  2 | 2.11e-12            | 4.44e-16            | pyswarms |
@@ -182,26 +182,26 @@ above 1.0 are wins, below 1.0 are losses.
 
 | Objective  | d  | V0 (s) | V1 (s) | V2 (s) | V3 (s) | V4 (s)   | sp V1 | sp V2 | sp V3 | sp V4 |
 |------------|----|--------|--------|--------|--------|----------|-------|-------|-------|-------|
-| Sphere     |  2 | 0.072  | 0.452  | 0.945  | 0.153  | 0.007    | 0.16x | 0.08x | 0.47x | **9.8x**  |
-| Sphere     | 10 | 0.120  | 0.807  | 1.682  | 0.223  | 0.015    | 0.15x | 0.07x | 0.54x | **7.9x**  |
-| Sphere     | 30 | 0.238  | 1.597  | 3.181  | 0.519  | 0.050    | 0.15x | 0.07x | 0.46x | **4.7x**  |
-| Rosenbrock |  2 | 0.185  | 0.787  | 1.384  | 0.344  | 0.014    | 0.23x | 0.13x | 0.54x | **13.4x** |
-| Rosenbrock | 10 | 0.559  | 2.225  | 3.751  | 0.825  | 0.036    | 0.25x | 0.15x | 0.68x | **15.3x** |
-| Rosenbrock | 30 | 0.428  | 2.129  | 3.536  | 0.830  | 0.061    | 0.20x | 0.12x | 0.52x | **7.0x**  |
-| Rastrigin  |  2 | 0.119  | 0.564  | 1.071  | 0.235  | 0.010    | 0.21x | 0.11x | 0.51x | **12.4x** |
-| Rastrigin  | 10 | 0.567  | 2.402  | 4.656  | 0.907  | 0.054    | 0.24x | 0.12x | 0.62x | **10.5x** |
-| Rastrigin  | 30 | 0.931  | 4.672  | 6.451  | 1.552  | 0.155    | 0.20x | 0.14x | 0.60x | **6.0x**  |
-| Ackley     |  2 | 0.492  | 2.218  | 3.121  | 0.731  | 0.027    | 0.22x | 0.16x | 0.67x | **18.2x** |
-| Ackley     | 10 | 0.838  | 3.562  | 4.369  | 1.114  | 0.059    | 0.23x | 0.19x | 0.75x | **14.2x** |
-| Ackley     | 30 | 1.155  | 4.998  | 7.563  | 1.935  | 0.160    | 0.23x | 0.15x | 0.60x | **7.2x**  |
+| Sphere     |  2 | 0.037  | 0.252  | 0.397  | 0.085  | 0.005    | 0.15x | 0.09x | 0.43x | **7.4x**  |
+| Sphere     | 10 | 0.081  | 0.480  | 0.724  | 0.159  | 0.011    | 0.17x | 0.11x | 0.51x | **7.6x**  |
+| Sphere     | 30 | 0.142  | 0.893  | 1.457  | 0.346  | 0.035    | 0.16x | 0.10x | 0.41x | **4.1x**  |
+| Rosenbrock |  2 | 0.115  | 0.459  | 0.589  | 0.198  | 0.008    | 0.25x | 0.20x | 0.58x | **13.9x** |
+| Rosenbrock | 10 | 0.276  | 1.064  | 1.475  | 0.493  | 0.024    | 0.26x | 0.19x | 0.56x | **11.4x** |
+| Rosenbrock | 30 | 0.268  | 1.111  | 1.536  | 0.460  | 0.037    | 0.24x | 0.17x | 0.58x | **7.2x**  |
+| Rastrigin  |  2 | 0.069  | 0.317  | 0.447  | 0.142  | 0.008    | 0.22x | 0.16x | 0.49x | **8.6x**  |
+| Rastrigin  | 10 | 0.211  | 0.787  | 1.100  | 0.346  | 0.019    | 0.27x | 0.19x | 0.61x | **11.3x** |
+| Rastrigin  | 30 | 0.298  | 1.026  | 1.575  | 0.474  | 0.052    | 0.29x | 0.19x | 0.63x | **5.7x**  |
+| Ackley     |  2 | 0.168  | 0.502  | 0.745  | 0.260  | 0.011    | 0.34x | 0.23x | 0.65x | **15.2x** |
+| Ackley     | 10 | 0.260  | 0.805  | 1.138  | 0.397  | 0.028    | 0.32x | 0.23x | 0.66x | **9.4x**  |
+| Ackley     | 30 | 0.348  | 1.028  | 1.553  | 0.527  | 0.052    | 0.34x | 0.22x | 0.66x | **6.7x**  |
 
 **Reading.**
 
-- **V4 wins every single cell**, by a factor between 4.7x and 18.2x. The
+- **V4 wins every single cell**, by a factor between 4.1x and 15.2x. The
   vectorised approach is, by a wide margin, the right strategy for cheap
   numerical fitnesses on a single machine.
-- **V1, V2 always lose** by the same factor as before — GIL for V1, IPC for V2.
-- **V3 lies between V0 and V1**: the event loop adds ~1.3-2.2x overhead (0.46-0.75x)
+- **V1, V2 always lose** — GIL for V1, IPC for V2.
+- **V3 lies between V0 and V1**: the event loop adds ~1.5–2.4x overhead (0.41–0.66x)
   but no thread/process management cost. With latency = 0 it cannot win.
 - The gap between V0 and V1/V2 narrows with dimension (more expensive fitness)
   but never crosses 1x for these benchmarks.
@@ -225,17 +225,17 @@ Source: `results/latency.csv`.
 
 | Latency / particle | V0 (s) | V3 (s) | Speedup V3 vs V0 |
 |--------------------|-------:|-------:|------------------:|
-|   1 ms             |  3.05  |  0.551 |  5.5x             |
-|   5 ms             |  3.33  |  0.240 |  **13.9x**        |
-|  10 ms             |  7.51  |  0.305 |  **24.6x**        |
-|  20 ms             |  9.71  |  0.450 |  **21.6x**        |
-|  50 ms             | 34.40  |  1.293 |  **26.6x**        |
+|   1 ms             |  0.65  |  0.031 |  **21.1x**        |
+|   5 ms             |  1.98  |  0.133 |  **14.9x**        |
+|  10 ms             |  3.70  |  0.202 |  **18.3x**        |
+|  20 ms             |  7.04  |  0.341 |  **20.6x**        |
+|  50 ms             | 17.97  |  0.848 |  **21.2x**        |
 
-The speedup reaches ~27x because that is roughly the swarm-level
+The speedup reaches ~21x because that is roughly the swarm-level
 concurrency `asyncio.gather` can extract — N=20 particles whose sleeps overlap
 on a single thread. With more particles the asymptote would rise.
 
-This is the canonical asyncio narrative: the moment an evaluation includes
+This is the standard asyncio use case: the moment an evaluation includes
 *any* real waiting (network call, queued service, sensor poll), V3 transforms
 the timing from `N × latency` to `≈ max(latency)`.
 
@@ -245,9 +245,9 @@ Fraction of total time spent inside `evaluate()` (higher = less overhead):
 
 | Objective  | d  | V0     | V1     | V2     | V3     | V4     |
 |------------|----|--------|--------|--------|--------|--------|
-| Sphere     | 30 | 79.2 % | 92.6 % | 95.6 % | 87.1 % | 11.5 % |
-| Rastrigin  | 30 | 87.9 % | 94.2 % | 95.8 % | 91.2 % | 39.5 % |
-| Ackley     | 30 | 91.1 % | 95.3 % | 96.6 % | 92.9 % | 44.1 % |
+| Sphere     | 30 | 76.9 % | 92.4 % | 94.9 % | 87.0 % | 10.7 % |
+| Rastrigin  | 30 | 86.2 % | 93.4 % | 95.2 % | 90.3 % | 41.5 % |
+| Ackley     | 30 | 89.2 % | 93.7 % | 95.5 % | 91.8 % | 45.1 % |
 
 Two things stand out:
 
@@ -260,30 +260,77 @@ Two things stand out:
    dominates. To go faster, the next bottleneck would be the update step
    — which is also vectorisable.
 
-### 3.4 Batching experiment (V2, chunksize sweep)
+### 3.5 Batching experiment (V2, chunksize sweep)
 
 Source: `results/batching.csv`. V2 on Ackley d=30 with 160 particles, 400
-iterations, 4 workers, 3 seeds. V0 baseline: 3.08 s.
+iterations, 4 workers, 3 seeds. V0 baseline: 0.42 s.
 
 | chunk_size | V2 time (s)       | speedup vs V0 |
 |-----------:|------------------:|--------------:|
-|   1        | 97.77 ± 32.49     | 0.03x         |
-|   4        |  9.57 ± 1.93      | 0.32x         |
-|   8        |  6.41 ± 2.35      | 0.48x         |
-|  16        |  4.19 ± 1.41      | 0.74x         |
-|  **32**    |  **2.85 ± 0.35**  | **1.08x**     |
-|  64        |  3.13 ± 0.31      | 0.98x         |
-| 128        |  4.24 ± 1.92      | 0.73x         |
+|   1        | 25.59 ± 9.39      | 0.02x         |
+|   4        |  9.64 ± 1.18      | 0.04x         |
+|   8        |  5.34 ± 0.90      | 0.08x         |
+|  16        |  3.64 ± 0.50      | 0.12x         |
+|  32        |  2.29 ± 0.29      | 0.19x         |
+|  **64**    |  **1.97 ± 0.22**  | **0.22x**     |
+| 128        |  2.60 ± 0.20      | 0.16x         |
 
-**Reading.** Going from `chunksize=1` to `chunksize=32` improves V2 by roughly
-**34x** (97.8 s -> 2.85 s). The shape is the classic IPC-amortisation curve: at
-chunk=1 every particle is one pickle round-trip; at chunk=32 each worker gets
+**Reading.** Going from `chunksize=1` to `chunksize=64` improves V2 by roughly
+**13x** (25.6 s → 1.97 s). The shape is the classic IPC-amortisation curve: at
+chunk=1 every particle is one pickle round-trip; at chunk=64 each worker gets
 a batch of particles at once and the per-particle IPC cost drops. Past
-chunk=32 the workers start running out of work to overlap and the curve degrades.
+chunk=64 the workers start running out of work to overlap and the curve
+degrades.
 
-At the optimal chunksize, V2 roughly matches V0 (1.08x speedup) — batching
-narrows the IPC gap dramatically. The break-even point requires
-`T_f >> T_ipc / chunksize`.
+Even at the optimal chunksize, V2 remains ~5x slower than V0 — batching
+narrows the IPC gap dramatically but not enough to break even when the
+objective is this cheap (~1 µs per particle). The break-even point requires
+`T_f >> T_ipc / chunksize`, which the SIR use case (Section 6) confirms.
+
+### 3.6 Grid search over hyperparameters
+
+Source: `results/grid_search.csv`. Sphere d=2, 100 particles, 500 iterations,
+5 seeds per combination, sequential and vectorised evaluators. The grid sweeps
+`w ∈ {0.4, 0.719, 0.9}`, `c1 ∈ {1.0, 1.49445, 2.0}`,
+`c2 ∈ {1.0, 1.49445, 2.0}` — 27 combinations × 5 seeds × 2 evaluators = 270
+rows.
+
+**Top 5 combinations** (sequential evaluator, mean best value over 5 seeds):
+
+| w    | c1      | c2      | Mean best       | Conv. iter |
+|------|---------|---------|-----------------|------------|
+| 0.40 | 1.000   | 1.000   | 9.82e-30        | 31         |
+| 0.40 | 1.494   | 1.000   | 3.94e-28        | 33         |
+| 0.40 | 2.000   | 1.000   | 1.77e-26        | 35         |
+| 0.40 | 1.494   | 1.494   | 2.36e-26        | 37         |
+| 0.40 | 1.000   | 1.494   | 3.24e-26        | 32         |
+
+**Worst combination**: w=0.9, c1=1.494, c2=2.0 → mean best = 7.10e-02. The
+swarm barely converges — particles oscillate without settling.
+
+**Effect of inertia weight** (averaged over all c1, c2):
+
+| w    | Avg. best value | Avg. conv. iter |
+|------|-----------------|-----------------|
+| 0.40 | 1.63e-21        | 36              |
+| 0.719| 1.10e-13        | 42              |
+| 0.90 | 2.35e-02        | 14              |
+
+Low inertia (w=0.4) dominates: particles decelerate quickly, allowing precise
+local search. High inertia (w=0.9) keeps particles moving too fast — they
+converge earlier (fewer iterations) but to much worse values. The Clerc-Kennedy
+default (w=0.719) sits in the middle, balancing exploration and exploitation.
+
+**Effect of c1 and c2** is weaker than the effect of w. Across all
+combinations, lowering c2 (social coefficient) improves quality slightly —
+reducing the attraction to the global best gives the swarm more time to
+explore before collapsing. The cognitive coefficient (c1) has minimal effect
+in this range.
+
+**Takeaway.** On Sphere d=2 the dominant knob is w. The default Clerc-Kennedy
+parameters (w=0.719, c1=c2=1.49445) are a good general-purpose choice but are
+not optimal for this specific function — a lower inertia finds deeper minima at
+the cost of reduced exploration capability on harder landscapes.
 
 ## 4. Discussion
 
@@ -312,9 +359,10 @@ The pickle round-trip takes ~100 us per batch. Even with 4 workers running in
 parallel, the net result is a slowdown of 5–17x, which the data confirms.
 
 The batching sweep shows that the issue is *per-call* overhead, not compute:
-raising `chunksize` from 1 to 64 improves V2 by 13x by amortising fewer
-pickles over more evaluations. The curve plateaus before reaching V0 because
-the per-particle cost is still dominated by the constant dispatch, not by FLOPs.
+raising `chunksize` from 1 to 64 improves V2 by ~13x by amortising fewer
+pickles over more evaluations. Even at the optimal chunksize, V2 remains
+~5x slower than V0 because the per-particle cost is still dominated by
+the constant dispatch overhead, not by FLOPs.
 
 ### 4.3 When parallelism would win
 
@@ -372,7 +420,7 @@ V4 does not generalise to expensive fitnesses that are not vectorisable
 (e.g. running an external simulator binary). In that regime V2 takes over.
 The two strategies are complementary, not competing.
 
-### 4.4 Design decisions
+### 4.6 Design decisions
 
 **Velocity clamping.** Without `vmax`, a particle that overshoots the boundary
 gets clamped back to the edge, but its velocity remains large. On the next
@@ -407,7 +455,7 @@ each iteration with the current `SwarmState`. This enables animation recording,
 custom convergence criteria, or live dashboards without modifying `run_pso` —
 a common extensibility pattern in optimisation libraries.
 
-### 4.6 Limitations
+### 4.7 Limitations
 
 - 4-core VM: results on a host with more physical cores could shift ratios
   slightly but not the ordering (V0 will still dominate for cheap fitnesses).
@@ -419,19 +467,19 @@ a common extensibility pattern in optimisation libraries.
 ## 5. Conclusions
 
 1. **V4 (NumPy vectorised) is the clear winner** for cheap numerical fitness
-   functions: 5–18x speedup over V0 across all benchmarks and dimensions.
+   functions: 4–15x speedup over V0 across all benchmarks and dimensions.
    No threads, no processes, no event loop — just the right shape of code.
 2. **V0 is the right baseline** but loses to V4 by a constant factor that
    reflects how much Python interpreter overhead the vectorised version
    avoids.
-3. **V1 never helps** on CPU-bound Python with cheap fitnesses: the GIL wins.
-   With expensive fitnesses (SIR, ~1 ms/particle) it gets a modest 1.5x
-   speedup because NumPy releases the GIL during internal C calls.
-4. **V2 has a clear IPC wall**: batching gives ~34x improvement (chunk 1 → 32)
-   and can match V0 for microsecond fitnesses at optimal chunksize. V2 wins
-   clearly (2.2x) when the fitness itself costs more than the IPC round-trip.
-5. **V3 (asyncio) inverts its sign with latency**: a loss of 0.5–0.75x with
-   zero latency, a win of 5–27x once any I/O-style waiting is involved.
+3. **V1 never helps** on CPU-bound Python: the GIL wins. Even on the SIR
+   use case (~1 ms/particle) V1 loses slightly (0.89x) — the per-particle
+   cost is not high enough to offset thread dispatch overhead.
+4. **V2 has a clear IPC wall**: batching gives ~13x improvement (chunk 1 → 64)
+   but never crosses V0 for microsecond fitnesses. V2 wins clearly (2.19x)
+   when the fitness itself costs more than the IPC round-trip (SIR use case).
+5. **V3 (asyncio) inverts its sign with latency**: a loss of 0.4–0.66x with
+   zero latency, a win of 15–21x once any I/O-style waiting is involved.
    The break-even point is ~1 ms per particle.
 6. **The strategy pattern paid for itself**: swapping evaluator / bounds /
    topology does not touch `run_pso`. Two bounds policies (Clamp, Reflect),
@@ -503,28 +551,28 @@ seeds, all 5 evaluators on the SIR fitness.
 
 | Evaluator | Time (s)         | Speedup vs V0 | beta  | gamma | I0     |
 |-----------|------------------|---------------|-------|-------|--------|
-| V0 sequential       | 28.16 ± 16.94 | 1.00x        | 0.2965 | 0.0998 | 11.78 |
-| V1 threading        | 18.90 ± 0.33  | 1.49x        | 0.2965 | 0.0998 | 11.78 |
-| **V2 multiprocessing** | **12.72 ± 1.31** | **2.21x** | 0.2965 | 0.0998 | 11.78 |
-| V3 async (lat=0)    | 19.42 ± 7.46  | 1.45x        | 0.2965 | 0.0998 | 11.78 |
-| **V4 vectorised**   | **7.29 ± 0.05**  | **3.86x** | 0.2965 | 0.0998 | 11.78 |
+| V0 sequential       | 13.41 ± 0.56  | 1.00x        | 0.2965 | 0.0998 | 11.78 |
+| V1 threading        | 15.00 ± 0.25  | 0.89x        | 0.2965 | 0.0998 | 11.78 |
+| **V2 multiprocessing** | **6.13 ± 0.83** | **2.19x** | 0.2965 | 0.0998 | 11.78 |
+| V3 async (lat=0)    | 14.05 ± 0.19  | 0.95x        | 0.2965 | 0.0998 | 11.78 |
+| **V4 vectorised**   | **7.11 ± 0.03**  | **1.89x** | 0.2965 | 0.0998 | 11.78 |
 
 **Reading.**
 
-- **V2 finally wins** (2.21x). Per-particle compute (≈ 1 ms) is now
+- **V2 finally wins** (2.19x). Per-particle compute (≈ 1 ms) is now
   several times the IPC round-trip, so spreading 100 particles across
   4 workers amortises the cost. This flips the conclusion of Section
   3.2: parallelism *does* pay off — once the workload is in the right
   regime.
-- **V4 wins the most** (3.86x). NumPy overhead is now well amortised over
-  100 particles, and removing Python-loop overhead from the Euler step
-  is more valuable than the per-call dispatch cost.
-- **V1 gets a slight benefit** (1.49x) — the SIR fitness is expensive
-  enough that GIL contention is partially offset by NumPy operations
-  that release the GIL during internal C calls.
-- **V3 with `latency=0` is similar to V1** (1.45x). The
-  workload has no I/O, so asyncio's cooperative model cannot extract
-  meaningful overlap.
+- **V4 also wins** (1.89x). Removing the per-particle Python loop from
+  the Euler integration pays off, though the advantage is smaller than
+  on cheap benchmarks because the Euler loop itself is heavier.
+- **V1 loses slightly** (0.89x) — the SIR fitness is expensive but not
+  enough to offset the thread dispatch overhead under the GIL. The
+  per-particle cost (~1 ms) is still too short for threading to win.
+- **V3 with `latency=0` also loses slightly** (0.95x). The workload has
+  no I/O, so asyncio's cooperative model cannot extract meaningful
+  overlap — event-loop scheduling adds a small overhead.
 - **All five strategies converge to the same parameters** (β = 0.2965,
   γ = 0.0998, I0 = 11.78), well within the 5 % noise budget around the
   ground truth (0.30, 0.10, 10). The variants differ in wall time but
@@ -544,10 +592,11 @@ epidemiological parameters from observed cases).
 Two strategies coexist as the right choice for different scenarios:
 
 - If the fitness is **expressible as a NumPy operation on the full
-  particle matrix**, V4 wins essentially without overhead.
+  particle matrix**, V4 wins (1.89x on SIR) without any process or
+  thread management.
 - If the fitness involves **external code that cannot be vectorised**
   (a simulator binary, a remote model, a third-party library), V2 wins
-  by extracting parallelism at the process level.
+  (2.19x on SIR) by extracting parallelism at the process level.
 
 This is the central takeaway of the project, and it now rests on
 measurements from both a synthetic suite *and* an applied use case.
@@ -586,7 +635,9 @@ measurements from both a synthetic suite *and* an applied use case.
 | `results/sir_comparison.csv`      | `scripts/run_sir_comparison.py` (use case)  |
 | `data/sir_observations.csv`       | `scripts/generate_sir_observations.py`      |
 | `results/pyswarms_baseline.csv`   | `scripts/run_pyswarms_baseline.py`          |
-| `results/grid_search.csv`         | `scripts/run_grid_search.py`                |
+| `results/grid_search.csv`         | `scripts/run_grid_search.py` (270 rows)     |
+| `results/swarm_sphere.gif`        | `scripts/make_viz.py` (2D swarm animation)  |
+| `results/swarm_sphere_3d.gif`     | `scripts/make_viz.py` (3D swarm animation)  |
 | `results/analysis/`               | `scripts/analyze_results.py`                |
 
 ## Appendix B — Reproducing the experiments
@@ -600,5 +651,6 @@ python scripts/run_batching_experiment.py       # ~3 min
 python scripts/run_latency_experiment.py        # ~3 min, V0 vs V3 across latencies
 python scripts/run_sir_comparison.py            # ~5 min, SIR use case across V0–V4
 python scripts/run_pyswarms_baseline.py         # ~1 min
+python scripts/run_grid_search.py               # ~2 min, 3x3x3 grid x 5 seeds
 python scripts/analyze_results.py               # plots + summary
 ```

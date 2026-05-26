@@ -62,7 +62,7 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 | `python scripts/run_pyswarms_baseline.py` | Convergence vs PySwarms library |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
 | `python scripts/analyze_results.py --results-dir results/` | Convergence comparison, boxplot, summary table |
-| `pytest` | Run unit tests (60 tests) |
+| `pytest` | Run unit tests (73 tests) |
 
 ---
 
