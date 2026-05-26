@@ -1,13 +1,13 @@
 """Boundary handling strategies for PSO.
 
 Defines an abstract BoundsPolicy contract so different strategies (clamp,
-reflect, penalty) can be swapped without touching the core PSO loop. Only
-ClampBounds is implemented in the current delivery — it clips positions
-back into the search box and zeroes the corresponding velocity component
-to prevent the particle from immediately trying to escape again.
+reflect, penalty) can be swapped without touching the core PSO loop. Two
+implementations are provided:
 
-The free function clamp_positions() is kept for convenience and is used
-internally by ClampBounds.
+- ClampBounds: clips positions and zeroes velocity on hit axes.
+- ReflectBounds: mirrors excess distance and flips velocity sign.
+
+The free function clamp_positions() is kept for convenience.
 """
 from abc import ABC, abstractmethod
 import numpy as np
