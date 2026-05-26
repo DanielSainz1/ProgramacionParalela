@@ -603,7 +603,7 @@ measurements from both a synthetic suite *and* an applied use case.
 
 ## 7. Test suite
 
-73 tests across 16 test files, covering:
+76 tests across 16 test files, covering:
 
 | Category             | Tests | What they verify                                         |
 |----------------------|------:|----------------------------------------------------------|
@@ -613,11 +613,11 @@ measurements from both a synthetic suite *and* an applied use case.
 | Bounds enforcement   |     3 | All particles stay in box across all iterations          |
 | Bounds policies      |     5 | ClampBounds clips+zeroes; ReflectBounds reflects+flips; both converge |
 | Topologies           |     4 | GlobalBest broadcasts; Ring picks local best; both converge |
-| Reproducibility      |     4 | Same seed = same result; different seeds differ; all objectives |
+| Reproducibility      |     6 | Same seed = same result; different seeds differ; all objectives; V3 and V4 reproducible |
 | Pool lifecycle       |     7 | open/close/reuse for V1,V2; pickle rejection for lambdas/closures |
 | Velocity clamping    |     6 | Velocities respect vmax; convergence across ratios; reproducibility |
 | on_iteration callback|     3 | Called every iteration; sees updated gbest; None is safe  |
-| Evaluator equivalence|     2 | V0/V1 exact match; V0/V2 within tolerance                |
+| Evaluator equivalence|     3 | V0/V1 exact match; V0/V2 within tolerance; V0/V3 exact match |
 | Async evaluator (V3) |     3 | Same values as V0 at latency=0; lifecycle reusable; gather overlaps |
 | Vectorised (V4)      |     7 | scalar==vec per particle for all 4 objectives; PSO converges; numerical match with V0 |
 | SIR use case         |     3 | Integrator qualitative behaviour; sir_vec matches sir; PSO recovers ground-truth parameters |
@@ -644,7 +644,7 @@ measurements from both a synthetic suite *and* an applied use case.
 
 ```bash
 pip install -e ".[dev]"
-pytest                                          # 73 tests
+pytest                                          # 76 tests
 python scripts/generate_sir_observations.py     # one-off, produces data/sir_observations.csv
 python scripts/run_comparison.py                # ~5 min, 5 seeds x 60 cells (V0–V4)
 python scripts/run_batching_experiment.py       # ~3 min

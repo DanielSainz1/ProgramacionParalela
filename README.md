@@ -62,7 +62,7 @@ Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
 | `python scripts/run_pyswarms_baseline.py` | Convergence vs PySwarms library |
 | `python scripts/make_viz.py --run-dir results/<folder>/` | Generate plots and animations |
 | `python scripts/analyze_results.py --results-dir results/` | Convergence comparison, boxplot, summary table |
-| `pytest` | Run unit tests (73 tests) |
+| `pytest` | Run unit tests (76 tests) |
 
 ---
 
@@ -253,7 +253,7 @@ from 7x (Rastrigin) to 55x (Sphere) on the benchmark suite.
 pytest
 ```
 
-**73 tests across 16 files**, covering: objective function correctness,
+**76 tests across 16 files**, covering: objective function correctness,
 convergence, monotonic gbest, bounds enforcement, both bounds policies, both
 topologies, reproducibility, pool lifecycle, pickle validation, velocity
 clamping, on_iteration callback, evaluator equivalence, persistence, and grid
