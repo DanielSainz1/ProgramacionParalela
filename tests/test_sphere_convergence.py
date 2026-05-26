@@ -34,3 +34,16 @@ def test_sphere_converges_across_seeds(seed):
     """Sphere must converge regardless of seed."""
     result = _run_sphere(d=2, seed=seed)
     assert result.best_value < 1e-5
+
+
+def test_early_stopping_triggers():
+    """PSO must stop before max_iter when stagnation limit is reached.
+
+    Sphere d=2 converges fast, so with stagnation=20 the loop should
+    exit well before 500 iterations.
+    """
+    result = _run_sphere(d=2, iters=500, stagnation=20)
+    # best_history has iters+1 entries (initial + one per iteration)
+    actual_iters = len(result.best_history) - 1
+    assert actual_iters < 500, f"Expected early stop but ran all 500 iters"
+    assert result.best_value < 1e-6

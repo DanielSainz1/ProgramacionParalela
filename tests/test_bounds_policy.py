@@ -72,3 +72,15 @@ def test_reflect_bounds_pso_converges():
                      lower, upper, ev, seed=42,
                      bounds_policy=ReflectBounds(lower, upper))
     assert result.best_value < 1e-5
+
+
+def test_reflect_bounds_pso_converges_d10():
+    """ReflectBounds must also work on higher dimensions."""
+    d = 10
+    lower = np.full(d, -10.0)
+    upper = np.full(d, 10.0)
+    ev = SequentialEvaluator(sphere)
+    result = run_pso(sphere, d, 60, 500, 0.719, 1.49445, 1.49445,
+                     lower, upper, ev, seed=42,
+                     bounds_policy=ReflectBounds(lower, upper))
+    assert result.best_value < 1e-3

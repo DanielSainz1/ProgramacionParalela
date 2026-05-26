@@ -327,6 +327,10 @@ reducing the attraction to the global best gives the swarm more time to
 explore before collapsing. The cognitive coefficient (c1) has minimal effect
 in this range.
 
+The heatmap in `results/grid_search_heatmap.png` visualises mean fitness on the
+(w, c2) plane (averaged over c1 and 5 seeds, log₁₀ scale). The dark band at
+w=0.4 confirms the table above: low inertia dominates regardless of c2.
+
 **Takeaway.** On Sphere d=2 the dominant knob is w. The default Clerc-Kennedy
 parameters (w=0.719, c1=c2=1.49445) are a good general-purpose choice but are
 not optimal for this specific function — a lower inertia finds deeper minima at
@@ -454,6 +458,16 @@ function). This is tested with `test_multiprocessing_rejects_lambda` and
 each iteration with the current `SwarmState`. This enables animation recording,
 custom convergence criteria, or live dashboards without modifying `run_pso` —
 a common extensibility pattern in optimisation libraries.
+
+**Visualisations.** The `viz/` module produces two animations: a 2D swarm
+trajectory (`swarm_sphere.gif`) that shows how particles collapse toward the
+optimum over iterations, and a 3D variant (`swarm_sphere_3d.gif`) for d=3 that
+gives a more intuitive view of the search landscape and particle movement.
+Both are generated via `scripts/make_viz.py` using the `on_iteration` callback
+to record positions at each step. A grid-search heatmap
+(`results/grid_search_heatmap.png`) summarises how the (w, c2) plane affects
+final fitness — darker cells correspond to lower (better) values, confirming
+that low inertia dominates on Sphere.
 
 ### 4.7 Limitations
 
@@ -603,15 +617,15 @@ measurements from both a synthetic suite *and* an applied use case.
 
 ## 7. Test suite
 
-76 tests across 16 test files, covering:
+78 tests across 16 test files, covering:
 
 | Category             | Tests | What they verify                                         |
 |----------------------|------:|----------------------------------------------------------|
 | Objective functions  |    13 | f(optimum)=0 for all 4 functions at d=2,10; positivity; known values |
-| Convergence          |     6 | Sphere converges at d=2,10 across multiple seeds         |
+| Convergence          |     7 | Sphere converges at d=2,10 across multiple seeds; early stopping triggers |
 | Monotonic gbest      |     3 | Global best never worsens (sphere, ackley, high-dim)     |
 | Bounds enforcement   |     3 | All particles stay in box across all iterations          |
-| Bounds policies      |     5 | ClampBounds clips+zeroes; ReflectBounds reflects+flips; both converge |
+| Bounds policies      |     6 | ClampBounds clips+zeroes; ReflectBounds reflects+flips; both converge (incl. d=10) |
 | Topologies           |     4 | GlobalBest broadcasts; Ring picks local best; both converge |
 | Reproducibility      |     6 | Same seed = same result; different seeds differ; all objectives; V3 and V4 reproducible |
 | Pool lifecycle       |     7 | open/close/reuse for V1,V2; pickle rejection for lambdas/closures |
@@ -636,6 +650,7 @@ measurements from both a synthetic suite *and* an applied use case.
 | `data/sir_observations.csv`       | `scripts/generate_sir_observations.py`      |
 | `results/pyswarms_baseline.csv`   | `scripts/run_pyswarms_baseline.py`          |
 | `results/grid_search.csv`         | `scripts/run_grid_search.py` (270 rows)     |
+| `results/grid_search_heatmap.png` | Heatmap of grid search (w vs c2, log₁₀)    |
 | `results/swarm_sphere.gif`        | `scripts/make_viz.py` (2D swarm animation)  |
 | `results/swarm_sphere_3d.gif`     | `scripts/make_viz.py` (3D swarm animation)  |
 | `results/analysis/`               | `scripts/analyze_results.py`                |
@@ -644,7 +659,7 @@ measurements from both a synthetic suite *and* an applied use case.
 
 ```bash
 pip install -e ".[dev]"
-pytest                                          # 76 tests
+pytest                                          # 78 tests
 python scripts/generate_sir_observations.py     # one-off, produces data/sir_observations.csv
 python scripts/run_comparison.py                # ~5 min, 5 seeds x 60 cells (V0–V4)
 python scripts/run_batching_experiment.py       # ~3 min
