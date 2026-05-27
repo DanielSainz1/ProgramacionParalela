@@ -9,7 +9,7 @@ write-up with real numbers and analysis lives in [`docs/report.md`](docs/report.
 
 **TL;DR of findings (see report for details):**
 
-- **V4 (NumPy vectorised)** is the fastest of all variants: 7-55x speedup vs V0
+- **V4 (NumPy vectorised)** is the fastest of all variants: 4–15x speedup vs V0
   on the benchmark objectives. It eliminates the Python interpreter overhead
   by evaluating all particles at once via BLAS/SIMD.
 - **V0 (sequential)** is the baseline; for cheap objectives, classic
@@ -104,7 +104,7 @@ src/pso/
     ├── swarm_animation.py  # animate_swarm_2d() — particle movement GIF
     └── swarm_3d.py         # animate_swarm_3d() — 3D particle movement GIF
 
-tests/                  # 73 tests across 16 files
+tests/                  # 78 tests across 16 files
 ├── test_objectives.py          # f(optimum)=0, positivity, known values
 ├── test_sphere_convergence.py  # Convergence at d=2,10 across seeds
 ├── test_monotonic_gbest.py     # gbest never worsens
