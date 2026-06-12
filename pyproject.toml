@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pso"
 version = "0.1.0"
-description = "Parallel PSO benchmark - Programación Paralela"
+description = "Parallel and concurrent PSO strategies benchmarked on standard functions and an SIR epidemic model"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.0",
