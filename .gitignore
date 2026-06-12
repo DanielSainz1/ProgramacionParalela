@@ -212,4 +212,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-# results/ is tracked — the rubric requires pre-generated experiment outputs
+# Claude Code
+.claude/
+.cloreignore
+
+# Local backups
+Descargagithub/
+
+# results/ is tracked — pre-generated experiment outputs for reproducibility
