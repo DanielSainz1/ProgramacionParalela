@@ -36,7 +36,9 @@ def run_pso_from_config(cfg: PSOConfig, record_positions: bool = False) -> PSORe
             chunksize=cfg.chunk_size,
         )
 
-    return run_pso(objective, cfg.dim, cfg.n_particles, cfg.max_iter,
-    cfg.w, cfg.c1, cfg.c2, lower, upper, evaluator, seed=cfg.seed,
-    tol=cfg.tol, stagnation=cfg.stagnation, vmax_ratio=cfg.vmax_ratio,
-    record_positions=record_positions)
+    return run_pso(
+        objective, cfg.dim, cfg.n_particles, cfg.max_iter,
+        cfg.w, cfg.c1, cfg.c2, lower, upper, evaluator,
+        seed=cfg.seed, tol=cfg.tol, stagnation=cfg.stagnation,
+        vmax_ratio=cfg.vmax_ratio, record_positions=record_positions,
+    )
