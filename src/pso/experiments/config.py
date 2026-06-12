@@ -16,7 +16,7 @@ class PSOConfig:
     seed: int = 42
     tol: float = 1e-10
     stagnation: int = 50
-    vmax_ratio: float = None        # velocity clamp as fraction of range (e.g. 0.5)
+    vmax_ratio: float | None = None  # velocity clamp as fraction of range (e.g. 0.5)
     n_workers: int = 4              # threads (V1) or processes (V2)
     chunk_size: int = 10            # batch size for V2 (batching)
 
