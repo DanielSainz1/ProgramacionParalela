@@ -95,6 +95,7 @@ pip install -e ".[dev]"
 ```
 
 Dependencies: NumPy, Matplotlib, PyYAML (installed automatically).
+To run the PySwarms baseline comparison, also install the optional extra: `pip install -e ".[baseline]"`.
 
 ---
 
